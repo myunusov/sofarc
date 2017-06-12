@@ -13,7 +13,7 @@ import org.maxur.sofarc.core.service.WebServer
 import javax.inject.Inject
 
 /**
- * The Embeded Grizzly Embedded Web Server Adapter
+ * The Grizzly Embedded Web Server Adapter
  *
  * @param config  resource configuration
  * *
