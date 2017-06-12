@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.maxur</groupId>
+        <artifactId>maxur-base</artifactId>
+        <version>0.20</version>
+    </parent>
+
+    <artifactId>sofarc-base</artifactId>
+    <version>0.01-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <sofarc.root.path>${basedir}</sofarc.root.path>
+    </properties>
+
+    <modules>
+        <module>sofarc-core</module>
+    </modules>
+
+    <url>https://github.com/myunusov/sofarc.git</url>
+
+    <scm>
+	    <url>https://github.com/myunusov/sofarc</url>
+        <connection>scm:git@github.com:maxurtutor/sofarc.git</connection>
+        <developerConnection>scm:git@github.com:maxurtutor/sofarc.git</developerConnection>        
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Social Coding</system>
+        <url>https://github.com/myunusov/sofarc.git/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Travis</system>
+        <url>https://travis-ci.org/myunusov/sofarc.git/</url>
+        <notifiers/>
+    </ciManagement>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jcenter</id>
+            <name>JCenter</name>
+            <url>https://jcenter.bintray.com/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
