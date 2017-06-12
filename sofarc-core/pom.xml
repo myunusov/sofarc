@@ -77,7 +77,7 @@
                     <sourceLinks>
                         <link>
                             <dir>${project.basedir}</dir>
-                            <url>https://github.com/myunusov/sofarc</url>
+                            <url>https://github.com/myunusov/sofarc/tree/master/${project.artifactId}</url>
                             <urlSuffix>#L</urlSuffix>
                         </link>
                     </sourceLinks>
