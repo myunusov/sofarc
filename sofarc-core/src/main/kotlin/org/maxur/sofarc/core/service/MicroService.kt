@@ -10,15 +10,22 @@ import org.jvnet.hk2.annotations.Contract
 @Contract
 interface MicroService {
 
-    /**
-     * start
-     */
-    fun start()
-
-    /**
-     * stop
-     */
-    fun stop()
-
     val name: String
+
+    /**
+     * on start event
+     */
+    fun onStart()
+
+    /**
+     * on stop event
+     */
+    fun onStop()
+
+    /**
+     * on error event
+     *
+     * @param exception The exception associated with this failure
+     */
+    fun onError(exception:Exception)
 }

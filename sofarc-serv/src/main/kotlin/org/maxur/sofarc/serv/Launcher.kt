@@ -21,7 +21,7 @@ object Launcher {
      */
     @JvmStatic fun main(args: Array<String>) {
         val application: MicroService? = IoC.application()
-        application?.start() ?:
+        application?.onStart() ?:
                 log().error("Application is not configured")
     }
 

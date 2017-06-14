@@ -90,7 +90,7 @@
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
+            <artifactId>jersey-media-multipart</artifactId>
             <version>${jersey.version}</version>
             <exclusions>
                 <exclusion>
@@ -103,6 +103,10 @@
                 </exclusion>
                 <exclusion>
                     <artifactId>jackson-jaxrs-base</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
                     <groupId>com.fasterxml.jackson.jaxrs</groupId>
                 </exclusion>
             </exclusions>

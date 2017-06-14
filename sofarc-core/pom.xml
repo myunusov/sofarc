@@ -15,6 +15,7 @@
 
     <properties>
         <sofarc.root.path>${basedir}/..</sofarc.root.path>
+        <jackson-module-kotlin.version>2.8.7</jackson-module-kotlin.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,12 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jre8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
 
@@ -86,6 +93,75 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-annotations</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-core</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-base</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-annotations</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-core</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-base</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-bean-validation</artifactId>
+            <version>${jersey.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-annotations</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-core</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-base</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <!-- hk2 -->
         <dependency>
@@ -121,6 +197,21 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>${jackson-module-kotlin.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>kotlin-stdlib</artifactId>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>kotlin-reflect</artifactId>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <!-- Grizzly2 -->
         <dependency>
@@ -128,30 +219,7 @@
             <artifactId>jersey-container-grizzly2-http</artifactId>
             <version>${jersey.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
-            <version>${jersey.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>jackson-annotations</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-core</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-jaxrs-base</artifactId>
-                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-jaxrs-json-provider</artifactId>
-                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
+        
         <!-- hocon -->
         <dependency>
             <groupId>com.typesafe</groupId>
@@ -235,7 +303,7 @@
                 </executions>
                 <configuration>
                     <skip>false</skip>
-                    <outFormat>jekyll</outFormat>
+                    <outputFormat>jekyll</outputFormat>
                     <outputDir>${sofarc.root.path}/target/doc/</outputDir>
                     <!-- http://kotlinlang.org/docs/reference/kotlin-doc.html#module-and-package-documentation -->
                     <includes>

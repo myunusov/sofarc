@@ -31,21 +31,24 @@ class SofArcService @Inject constructor(
         @Named("Grizzly") val webServer: WebServer,
         val params: ConfigParams
 ) : MicroService {
-
     companion object {
+
         val log: Logger = LoggerFactory.getLogger(SofArcService::class.java)
     }
-
     @Value("name")
     override lateinit var name: String
 
-    override fun start() {
+    override fun onStart() {
         params.log()
         webServer.start()
         log.info("$name is started")
     }
 
-    override fun stop() {
+    override fun onError(exception: Exception) {
+        onStop()
+    }
+
+    override fun onStop() {
         webServer.stop()
         log.info("$name is stopped")
     }

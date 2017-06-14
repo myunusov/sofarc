@@ -9,15 +9,16 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.UriInfo
 
+
 /**
- * The type Application resource.
+ * The type Documentation resource.
  *
  * @author Maxim Yunusov
  * @version 1.0
  * @since <pre>11/29/13</pre>
  */
-@Path("/swagger")
-open class SwaggerResource {
+@Path("/doc")
+open class DocResource {
 
     /**
      * Gets a application documentation
@@ -40,3 +41,4 @@ open class SwaggerResource {
     }
 
 }
+

@@ -1,11 +1,15 @@
 package org.maxur.sofarc.core.rest
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.jackson.JacksonFeature
+import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.server.ServerProperties
 import org.jvnet.hk2.annotations.Contract
 import javax.annotation.PostConstruct
+import javax.inject.Inject
 import javax.ws.rs.core.Feature
 import javax.ws.rs.core.FeatureContext
 
@@ -16,6 +20,9 @@ import javax.ws.rs.core.FeatureContext
  */
 @Contract
 abstract class RestResourceConfig : ResourceConfig() {
+
+    @Inject
+    lateinit var mapper: ObjectMapper;
 
     @PostConstruct
     fun init() {
@@ -29,12 +36,16 @@ abstract class RestResourceConfig : ResourceConfig() {
         property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true)
 
         register(JacksonFeature::class.java)
-        //register(RuntimeExceptionHandler::class.java)
-        //register(ValidationExceptionHandler::class.java)
+
+        register(RuntimeExceptionHandler::class.java)
+
         register(ServiceLocatorFeature())
-        //register(ServiceEventListener("api/v1.0/reports"))
-        //register(DiagnosticResource::class.java)
-        //register(MultiPartFeature::class.java)
+        register(ServiceEventListener("/"))
+        register(MultiPartFeature::class.java)
+
+        val provider = JacksonJaxbJsonProvider()
+        provider.setMapper(mapper)
+        register(provider)
     }
 
     protected abstract val restPackages: Array<String>

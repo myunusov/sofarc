@@ -1,5 +1,6 @@
 package org.maxur.sofarc.core.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.utilities.binding.AbstractBinder
@@ -23,6 +24,8 @@ open class Config: AbstractBinder() {
 
                 })
                 .`in`(Singleton::class.java)
+
+        bindFactory(ObjectMapperProvider::class.java).to(ObjectMapper::class.java).`in`(Singleton::class.java)
     }
 
 
