@@ -65,86 +65,51 @@ class PropertiesServiceHoconImpl : PropertiesService {
 
     override fun asObject(key: String, clazz: Class<*>): Any? {
         try {
-            val configObject = getObject(key)
+            val configObject: ConfigObject? = findValue(Function {it?.getObject(key)})
             if (configObject != null) {
-                val value = configObject.render()
-                return objectMapper.readValue(value, clazz)
+                return objectMapper.readValue(configObject.render(), clazz)
             } else {
                 return null
             }
         } catch (e: IOException) {
-            log.error("Configuration parameter '{}' is not parsed.", key)
+            log.error("Configuration parameter '$key' is not parsed.")
             log.error(e.message, e)
             return null
         }
     }
 
     override fun asString(key: String): String? {
-        return getValue(key, Function<String, String?> { this.getString(it) })
+        return getValue(key, Function { it?.getString(key)})
     }
 
     override fun asLong(key: String): Long? {
-        return getValue(key, Function<String, Long?> { this.getLong(it) })
+        return getValue(key, Function { it?.getLong(key)})
     }
 
     override fun asInteger(key: String): Int? {
-        return getValue(key, Function<String, Int?> { this.getInt(it) })
+        return getValue(key, Function { it?.getInt(key)})
     }
-
-    private fun <T> getValue(key: String, method: Function<String, T?>): T? {
+    
+    private fun <T> getValue(key: String, transform: Function<Config?, T?>): T? {
         try {
-            val value = method.apply(key)
-            log.debug("Configuration parameter {} = '{}'", key, value)
+            val value = findValue(transform)
+            log.debug("Configuration parameter '$key' = '$value'")
             return value
         } catch (e: ConfigException.Missing) {
-            log.error("Configuration parameter '{}' is not found.", key)
+            log.error("Configuration parameter '$key' is not found.")
             throw e
         }
     }
 
-    private fun getObject(key: String): ConfigObject? {
+    private fun <T> findValue(transform: Function<Config?, T?>): T? {
         try {
             if (userConfig != null) {
-                return userConfig?.getObject(key)
+                return transform.apply(userConfig)
             }
         } catch (e: ConfigException.Missing) {
             log.debug(e.message, e)
         }
-        return defaultConfig?.getObject(key)
+        return transform.apply(defaultConfig)
     }
-
-    private fun getString(key: String): String? {
-        try {
-            if (userConfig != null) {
-                return userConfig?.getString(key)
-            }
-        } catch (e: ConfigException.Missing) {
-            log.debug(e.message, e)
-        }
-        return defaultConfig?.getString(key)
-    }
-
-    private fun getInt(key: String): Int? {
-        try {
-            if (userConfig != null) {
-                return userConfig?.getInt(key)
-            }
-        } catch (e: ConfigException.Missing) {
-            log.debug(e.message, e)
-        }
-        return defaultConfig?.getInt(key)
-    }
-
-    private fun getLong(key: String): Long? {
-        try {
-            if (userConfig != null) {
-                return userConfig?.getLong(key)
-            }
-        } catch (e: ConfigException.Missing) {
-            log.debug(e.message, e)
-        }
-        return defaultConfig?.getLong(key)
-    }
-
 
 }

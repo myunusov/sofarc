@@ -1,7 +1,7 @@
 package org.maxur.sofarc.serv
 
-import org.maxur.sofarc.core.service.IoC
 import org.maxur.sofarc.core.service.MicroService
+import org.maxur.sofarc.core.service.hk2.IoC
 import org.slf4j.LoggerFactory
 
 /**
@@ -20,12 +20,12 @@ object Launcher {
      * @param args - arguments of command.
      */
     @JvmStatic fun main(args: Array<String>) {
-        val locator = IoC.newLocator()
-        val application = locator.getService<MicroService>(MicroService::class.java)
+        val application: MicroService? = IoC.application()
         application?.start() ?:
-                LoggerFactory.getLogger(Launcher::class.java).error("Application is not configured")
+                log().error("Application is not configured")
     }
 
-
+    private fun log() = LoggerFactory.getLogger(Launcher::class.java)
+    
 }
 
