@@ -20,6 +20,13 @@ object Launcher {
      * @param args - arguments of command.
      */
     @JvmStatic fun main(args: Array<String>) {
+        /*
+          application {
+            name : ${Name}
+            configFormat: Hocon
+            webServer:    Grizzly
+          }.start
+         */
         val application: MicroService? = IoC.application()
         application?.onStart() ?:
                 log().error("Application is not configured")

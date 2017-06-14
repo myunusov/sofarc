@@ -26,7 +26,7 @@ import javax.annotation.PostConstruct
  * *
  * @since <pre>9/2/2015</pre>
  */
-@Service
+@Service(name = "Hocon")
 class PropertiesServiceHoconImpl : PropertiesService {
 
     companion object {

@@ -1,12 +1,12 @@
 package org.maxur.sofarc.core.service
 
-import org.glassfish.hk2.api.Injectee
-import org.glassfish.hk2.api.InjectionResolver
-import org.glassfish.hk2.api.ServiceHandle
+import org.glassfish.hk2.api.*
+import org.glassfish.hk2.utilities.BuilderHelper
 import org.maxur.sofarc.core.annotation.Value
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Type
+import javax.annotation.PostConstruct
 import javax.inject.Inject
 
 /**
@@ -17,12 +17,26 @@ import javax.inject.Inject
  * @since <pre>12.06.2017</pre>
  */
 class ConfigurationInjectionResolver @Inject constructor(
-        val propertiesService: PropertiesService
+        val propertiesServices: IterableProvider<PropertiesService>,
+        val locator: ServiceLocator
 ) : InjectionResolver<Value> {
+
+    lateinit var propertiesService: PropertiesService
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(ConfigurationInjectionResolver::class.java)
     }
+
+    @PostConstruct
+    fun init() {
+        //if (propertiesServices.size == 1) { TODO only first
+            propertiesService = propertiesServices.get()
+            val filter = BuilderHelper.createContractFilter(PropertiesService::class.java.name)
+            val descriptors: List<ActiveDescriptor<*>> = locator.getDescriptors(filter)
+            log.info("Configuration Properties Service is '${descriptors.get(0).name}'")
+        //}
+    }
+
 
     override fun resolve(injectee: Injectee, root: ServiceHandle<*>?): Any {
         val annotation = injectee.parent.getAnnotation(Value::class.java)
