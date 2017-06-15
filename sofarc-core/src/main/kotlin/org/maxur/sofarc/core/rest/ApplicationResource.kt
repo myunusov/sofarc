@@ -1,12 +1,9 @@
 package org.maxur.sofarc.core.rest
 
-import org.maxur.sofarc.core.service.ApplicationState
 import org.maxur.sofarc.core.service.MicroService
-import java.util.*
 import javax.inject.Inject
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
-import kotlin.concurrent.schedule
 
 
 /**
@@ -24,27 +21,11 @@ open class ApplicationResource @Inject constructor(val service: MicroService) {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     fun state(@PathParam("state") state: String) {
-        when (ApplicationState.from(state)) {
-            ApplicationState.STOP -> postpone({ stop() })
-            ApplicationState.RESTART -> postpone({ restart() })
+        when (MicroService.State.from(state)) {
+            MicroService.State.STOP -> service.stop()
+            MicroService.State.RESTART -> service.restart()
         }
     }
-
-    private fun restart() {
-        service.onStop()
-        service.onStart()
-    }
-
-    private fun stop() {
-        service.onStop()
-    }
-    
-    fun postpone(func: Function<Unit>) {
-        Timer("schedule", true).schedule(100) {
-            (func as () -> Unit).invoke()
-        }
-    }
-
 
 }
 

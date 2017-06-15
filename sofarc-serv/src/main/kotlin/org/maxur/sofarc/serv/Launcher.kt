@@ -27,12 +27,9 @@ object Launcher {
             webServer:    Grizzly
           }.start
          */
-        val application: MicroService? = IoC.application()
-        application?.onStart() ?:
-                log().error("Application is not configured")
+        IoC.application().start()
     }
-
-    private fun log() = LoggerFactory.getLogger(Launcher::class.java)
+    
     
 }
 

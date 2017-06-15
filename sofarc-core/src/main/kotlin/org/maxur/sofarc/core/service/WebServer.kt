@@ -1,7 +1,6 @@
 package org.maxur.sofarc.core.service
 
 import org.jvnet.hk2.annotations.Contract
-import org.maxur.sofarc.core.annotation.Value
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -12,51 +11,35 @@ import java.net.URI
  * @since <pre>12.06.2017</pre>
  */
 @Contract
-abstract class WebServer {
+abstract class WebServer(val baseUri: URI, val apiPath: String): EmbeddedService {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
 
-    /**
-     * webapp folder url
-     */
-    protected val WEB_APP_URL = "/"
-
-
-    /**
-     * WebApp URL
-     */
-    @SuppressWarnings("unused")
-    @Value("webapp.url")
-    lateinit var webappUri: URI
+    abstract val name: String
 
     /**
      * Start Web server.
      */
-    fun start() {
+    override fun start() {
         log.info("Start Web Server")
         launch()
-        log.info("Starting on " + webappUri)
+        log.info("${name} is started on $baseUri")
+        logEntries()
     }
 
     /**
      * Stop Web server.
      */
-    fun stop() {
+    override fun stop() {
         log.info("Stop Web Server")
         shutdown()
+        log.info("Web Server is stopped")
     }
 
-
-    /**
-     * Gets webapp uri.
-     *
-     * @return the webapp uri
-     */
-    protected fun webappUri(): URI {
-        return webappUri
-    }
+    protected abstract fun logEntries()
+    
 
     /**
      * web server launch
@@ -70,3 +53,4 @@ abstract class WebServer {
 
 
 }
+

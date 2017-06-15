@@ -5,9 +5,12 @@ import org.glassfish.hk2.utilities.BuilderHelper
 import org.maxur.sofarc.core.annotation.Value
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.reflect.Constructor
+import java.lang.reflect.Method
 import java.lang.reflect.Type
 import javax.annotation.PostConstruct
 import javax.inject.Inject
+
 
 /**
  * Resolve configuration by ConfigParameter annotations.
@@ -29,24 +32,59 @@ class ConfigurationInjectionResolver @Inject constructor(
 
     @PostConstruct
     fun init() {
-        //if (propertiesServices.size == 1) { TODO only first
+        if (propertiesServices.size == 1) {
             propertiesService = propertiesServices.get()
             val filter = BuilderHelper.createContractFilter(PropertiesService::class.java.name)
             val descriptors: List<ActiveDescriptor<*>> = locator.getDescriptors(filter)
             log.info("Configuration Properties Service is '${descriptors.get(0).name}'")
-        //}
+        } else {
+            throw IllegalStateException("More than one Configuration Properties Service is found")
+        }
     }
 
-
     override fun resolve(injectee: Injectee, root: ServiceHandle<*>?): Any {
-        val annotation = injectee.parent.getAnnotation(Value::class.java)
-        val name = annotation.value
+        //val annotation = injectee.parent.getAnnotation(Value::class.java)
+        val annotation = annotation(injectee)
+        val name = annotation.key
         val result = resolveByKey(name, injectee.requiredType)
         when (result) {
             null -> throw IllegalStateException("Property '$name' is not found")
             else -> return result
         }
     }
+
+    private fun annotation(injectee: Injectee): Value {
+        val element = injectee.parent
+
+        val isConstructor = element is Constructor<*>
+        val isMethod = element is Method
+
+        // if injectee is method or constructor, check its parameters
+        if (isConstructor || isMethod) {
+            val annotations: Array<Annotation>
+            if (isMethod) {
+                annotations = (element as Method).parameterAnnotations[injectee.position]
+            } else {
+                annotations = (element as Constructor<*>).parameterAnnotations[injectee.position]
+            }
+
+            for (annotation in annotations) {
+                if (annotation is Value) {
+                    return annotation
+                }
+            }
+        }
+
+        // check injectee itself (method, constructor or field)
+        if (element.isAnnotationPresent(Value::class.java)) {
+            return element.getAnnotation(Value::class.java)
+        }
+
+        // check class which contains injectee
+        val clazz = injectee.injecteeClass
+        return clazz.getAnnotation(Value::class.java)
+    }
+
 
     private fun resolveByKey(name: String, type: Type): Any? {
         when (type.typeName) {
@@ -66,7 +104,7 @@ class ConfigurationInjectionResolver @Inject constructor(
     }
 
     override fun isConstructorParameterIndicator(): Boolean {
-        return false
+        return true
     }
 
     override fun isMethodParameterIndicator(): Boolean {

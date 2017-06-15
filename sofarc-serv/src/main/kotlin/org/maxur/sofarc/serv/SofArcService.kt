@@ -16,11 +16,8 @@ import javax.inject.Named
  *
  * The SofArcService type.
  *
- * @param webServer             web Server
- *
- * @param params                service's config params * @param webServer             web Server
- *
  * @param params                service's config params
+ * @param webServer             web Server
  *
  * @author myunusov
  * @version 1.0
@@ -28,28 +25,26 @@ import javax.inject.Named
  */
 @Service
 class SofArcService @Inject constructor(
+        @Value(key = "name") name: String,
         @Named("Grizzly") val webServer: WebServer,
         val params: ConfigParams
-) : MicroService {
-    companion object {
+) : MicroService(name, webServer) {
 
+    companion object {
         val log: Logger = LoggerFactory.getLogger(SofArcService::class.java)
     }
-    @Value("name")
-    override lateinit var name: String
 
-    override fun onStart() {
+    override fun beforeStart() {
         params.log()
-        webServer.start()
         log.info("$name is started")
     }
 
     override fun onError(exception: Exception) {
-        onStop()
+        log.error(exception.message, exception)
+        stop()
     }
 
-    override fun onStop() {
-        webServer.stop()
+    override fun afterStop() {
         log.info("$name is stopped")
     }
 

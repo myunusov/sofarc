@@ -19,7 +19,7 @@ import javax.ws.rs.core.FeatureContext
  * @since <pre>12.06.2017</pre>
  */
 @Contract
-abstract class RestResourceConfig : ResourceConfig() {
+abstract class RestResourceConfig(val name: String, vararg val restPackages: String) : ResourceConfig() {
 
     @Inject
     lateinit var mapper: ObjectMapper;
@@ -47,10 +47,6 @@ abstract class RestResourceConfig : ResourceConfig() {
         provider.setMapper(mapper)
         register(provider)
     }
-
-    protected abstract val restPackages: Array<String>
-
-    protected abstract val name: String
 
     /**
      * service locator feature
