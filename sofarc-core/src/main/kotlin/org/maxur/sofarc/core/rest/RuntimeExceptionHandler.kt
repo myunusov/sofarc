@@ -3,6 +3,7 @@ package org.maxur.sofarc.core.rest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import sun.security.timestamp.TSResponse.BAD_REQUEST
+import javax.ws.rs.WebApplicationException
 import javax.ws.rs.core.GenericEntity
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
 import javax.ws.rs.core.Response
@@ -26,20 +27,31 @@ class RuntimeExceptionHandler : ExceptionMapper<RuntimeException> {
     }
 
     override fun toResponse(exception: RuntimeException): Response {
-        if (exception is IllegalArgumentException) {
-            log.warn(exception.message)
-            log.debug(exception.message, exception)
-            return status(BAD_REQUEST)
-                    .type(APPLICATION_JSON)
-                    .entity(makeUserErrorEntity(exception))
-                    .build()
-        } else {
-            log.error(exception.message, exception)
-            return status(Status.INTERNAL_SERVER_ERROR)
-                    .type(APPLICATION_JSON)
-                    .entity(makeSystemErrorEntity(exception))
-                    .build()
+        when (exception) {
+            is IllegalArgumentException -> return onIllegalArgument(exception)
+            is WebApplicationException  -> return onWebApplicationException(exception)
+            else -> {
+                log.error(exception.message, exception)
+                return status(Status.INTERNAL_SERVER_ERROR)
+                        .type(APPLICATION_JSON)
+                        .entity(makeSystemErrorEntity(exception))
+                        .build()
+            }
         }
+    }
+
+    private fun onWebApplicationException(exception: WebApplicationException): Response {
+        log.debug(exception.message, exception)
+        return exception.response
+    }
+
+    private fun onIllegalArgument(exception: IllegalArgumentException): Response {
+        log.warn(exception.message)
+        log.debug(exception.message, exception)
+        return status(BAD_REQUEST)
+                .type(APPLICATION_JSON)
+                .entity(makeUserErrorEntity(exception))
+                .build()
     }
 
     private fun makeSystemErrorEntity(exception: RuntimeException): GenericEntity<List<Incident>> {

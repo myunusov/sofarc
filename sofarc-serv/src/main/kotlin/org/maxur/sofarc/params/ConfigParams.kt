@@ -1,8 +1,12 @@
+@file:Suppress("unused")
+
 package org.maxur.sofarc.params
 
+import com.fasterxml.jackson.databind.SerializationFeature
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.service.grizzly.WebAppConfig
+import org.maxur.sofarc.core.service.ObjectMapperProvider
+import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -25,10 +29,15 @@ class ConfigParams @Inject constructor(
     }
     
     fun log() {
-        log.info("--- Configuration Parameters ---")
-        log.info("name   = $name")
-        log.info("webapp = $webapp")
-        log.info("--- --- --- --- --- --- --- --- ---")
+        log.info("\n--- Configuration Parameters ---\n")
+        log.info("$this")
+        log.info("\n---------------------------------\n")
+    }
+
+    override fun toString(): String {
+        val mapper = ObjectMapperProvider().provide()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        return mapper.writeValueAsString(this)
     }
 
 }

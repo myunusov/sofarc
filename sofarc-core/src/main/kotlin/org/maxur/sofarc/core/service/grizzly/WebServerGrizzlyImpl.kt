@@ -4,7 +4,6 @@ package org.maxur.sofarc.core.service.grizzly
 
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
-import org.glassfish.grizzly.http.server.StaticHttpHandler
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
@@ -12,6 +11,7 @@ import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.rest.RestResourceConfig
 import org.maxur.sofarc.core.service.WebServer
+import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -33,17 +33,17 @@ import javax.ws.rs.core.FeatureContext
  */
 @Service(name = "Grizzly")
 open class WebServerGrizzlyImpl
-    @Inject constructor(
-            @Value(key = "webapp") val webConfig: WebAppConfig,
-            val config: RestResourceConfig,
-            val locator: ServiceLocator
-    ): WebServer(webConfig.url, webConfig.apiPath) {
+@Inject constructor(
+        @Value(key = "webapp") val webConfig: WebAppConfig,
+        val config: RestResourceConfig,
+        val locator: ServiceLocator
+) : WebServer(webConfig.url, webConfig.apiPath) {
 
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
-    
+
     private lateinit var httpServer: HttpServer
 
     override val name: String
@@ -58,40 +58,38 @@ open class WebServerGrizzlyImpl
         cfg.httpHandlersWithMapping.forEach {
             (_, regs) ->
             run {
-                regs.forEach { log.info("${webConfig.url}${it.contextPath}") }
+                regs.forEach { log.info("${webConfig.url}${it.contextPath}/") }
 
             }
         }
     }
 
     override fun launch() {
-        httpServer = makeHttpService()
+        makeLoggerBridge()
+        val result = httpServer()
+        makeStaticHandlers(result.serverConfiguration)
+        httpServer = result
     }
 
     override fun shutdown() {
         httpServer.shutdownNow()
     }
 
-    private fun makeHttpService(): HttpServer {
-        makeLoggerBridge()
+    private fun httpServer(): HttpServer {
         val server = GrizzlyHttpServerFactory.createHttpServer(webConfig.apiUri, config, locator)
         val result = server
         result.serverConfiguration.isPassTraceRequest = true
         result.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8
-        makeStaticHandlers(result.serverConfiguration)
         return result
     }
 
     private fun makeStaticHandlers(serverConfiguration: ServerConfiguration) {
-        serverConfiguration.addHttpHandler(
-                StaticHttpHandler(webConfig.folderName),
-                normalisePath("/docs")
-        )
-/*        webConfig.content().entrySet().forEach { e ->
+        webConfig.staticContent.forEach {
             serverConfiguration.addHttpHandler(
-                    StaticHttpHandler(e.getKey()),
-                    normalisePath(WEB_APP_URL + e.getValue()))
-        }*/
+                    StaticHttpHandler(it),
+                    normalisePath("/${it.path}")
+            )
+        }
     }
 
     private fun normalisePath(path: String): String {

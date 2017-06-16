@@ -43,7 +43,6 @@ class ConfigurationInjectionResolver @Inject constructor(
     }
 
     override fun resolve(injectee: Injectee, root: ServiceHandle<*>?): Any {
-        //val annotation = injectee.parent.getAnnotation(Value::class.java)
         val annotation = annotation(injectee)
         val name = annotation.key
         val result = resolveByKey(name, injectee.requiredType)
