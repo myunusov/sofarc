@@ -3,7 +3,7 @@
 !.tgitconfig
 !/.mvn
 /.mvn/timing.properties
-
+log
 target
 
 *.iml

@@ -161,6 +161,25 @@
 
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/resources/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <version>${kotlin.version}</version>
@@ -232,6 +251,46 @@
                     </sourceDirectories>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>com.github.kongchen</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <version>3.1.4</version>
+                <configuration>
+                    <apiSources>
+                        <apiSource>
+                            <springmvc>false</springmvc>
+                            <locations>org.maxur.sofarc.core.rest</locations>
+                            <schemes>http</schemes>
+                            <host>baseurl</host>
+                            <info>
+                                <title>SOFTARC REST API</title>
+                                <version>v1</version>
+                                <description>This is a SoftArc Service REST API</description>
+                                <contact>
+                                    <email>myunusov(@)maxur.org</email>
+                                    <name>Maxim Yunusov</name>
+                                    <url>https://github.com/myunusov</url>
+                                </contact>
+                                <license>
+                                    <name>Apache 2</name>
+                                    <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+                                </license>
+                            </info>
+                            <swaggerDirectory>${project.build.directory}/generated-sources/resources/</swaggerDirectory>
+                        </apiSource>
+                    </apiSources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 

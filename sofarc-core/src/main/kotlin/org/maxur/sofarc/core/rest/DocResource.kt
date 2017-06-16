@@ -1,6 +1,7 @@
 package org.maxur.sofarc.core.rest
 
 import com.google.common.io.Resources
+import org.maxur.sofarc.core.annotation.Value
 import java.io.IOException
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -17,8 +18,8 @@ import javax.ws.rs.core.UriInfo
  * @version 1.0
  * @since <pre>11/29/13</pre>
  */
-@Path("/doc")
-open class DocResource {
+@Path("/swagger.json")
+open class DocResource(@Value(key = "webapp.api-path") val path: String) {
 
     /**
      * Gets a application documentation
@@ -30,7 +31,7 @@ open class DocResource {
     @Produces(MediaType.APPLICATION_JSON)
     fun swaggerDoc(@Context uriInfo: UriInfo): String {
         val uri = uriInfo.baseUri
-        val baseUri = "$uri.host:$uri.port"
+        val baseUri = "$uri"
         val url = Resources.getResource("swagger.json")
         try {
             val swaggerDoc: String = Resources.toString(url, Charsets.UTF_8)
