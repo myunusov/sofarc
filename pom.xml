@@ -27,6 +27,7 @@
         <jackson.version>2.8.7</jackson.version>
         <hk2.version>2.5.0-b32</hk2.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <guava.version>20.0</guava.version>
         <hocon.config.version>1.3.1</hocon.config.version>
     </properties>
 

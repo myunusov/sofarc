@@ -2,6 +2,7 @@
 
 package org.maxur.sofarc.core.service.grizzly
 
+import org.glassfish.grizzly.http.server.CLStaticHttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
 import org.glassfish.hk2.api.ServiceLocator
@@ -59,7 +60,6 @@ open class WebServerGrizzlyImpl
             (_, regs) ->
             run {
                 regs.forEach { log.info("${webConfig.url}${it.contextPath}/") }
-
             }
         }
     }
@@ -90,6 +90,14 @@ open class WebServerGrizzlyImpl
                     normalisePath("/${it.path}")
             )
         }
+        // TODO default index.html?url=%2Fapi/swagger.json
+        serverConfiguration.addHttpHandler(
+                CLStaticHttpHandler(
+                    WebServerGrizzlyImpl::class.java.getClassLoader(),
+                    "/META-INF/resources/webjars/swagger-ui/2.1.4/"
+                ),
+                normalisePath("/docs")
+        )
     }
 
     private fun normalisePath(path: String): String {

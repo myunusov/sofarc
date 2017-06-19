@@ -47,11 +47,12 @@ class PropertiesServiceHoconImpl : PropertiesService {
         try {
             defaultConfig = ConfigFactory.load().getConfig("DEFAULTS")
         } catch(e: ConfigException.Missing) {
-            log.error("The DEFAULT config not found. Add application.conf with DEFAULT section to classpass")
+            log.error("The DEFAULT config not found. Add application.conf with DEFAULT section to classpath")
         }
         try {
             userConfig = ConfigFactory.load().getConfig("CUSTOMER")
         } catch(e: ConfigException.Missing) {
+            log.error("The CUSTOMER config not found. Add user.conf with CUSTOMER section to conf folder")
         }
     }
 

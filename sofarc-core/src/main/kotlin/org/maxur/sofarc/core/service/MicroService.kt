@@ -52,7 +52,7 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
 
 
     private fun postpone(func: Function<Unit>) {
-        Timer("schedule", true).schedule(100) {
+        Timer("schedule", true).schedule(1000) {
             (func as () -> Unit).invoke()
         }
     }
