@@ -55,6 +55,33 @@
         <notifiers/>
     </ciManagement>
 
+    <profiles>
+        <profile>
+            <id>windows-profile</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <file>
+                    <exists>${java.home}/lib/tools.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <toolsjar>${java.home}/lib/tools.jar</toolsjar>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac-profile</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <file>
+                    <exists>${java.home}/../lib/tools.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
+            </properties>
+        </profile>
+    </profiles>
+
     <pluginRepositories>
         <pluginRepository>
             <id>jcenter</id>
