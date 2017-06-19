@@ -340,14 +340,6 @@
                         </apiSource>
                     </apiSources>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
         </plugins>

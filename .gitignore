@@ -5,6 +5,6 @@
 /.mvn/timing.properties
 log
 target
-
+/work
 *.iml
 

@@ -2,7 +2,6 @@
 
 package org.maxur.sofarc.core.service.grizzly
 
-import org.glassfish.grizzly.http.server.CLStaticHttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
 import org.glassfish.hk2.api.ServiceLocator
@@ -94,7 +93,7 @@ open class WebServerGrizzlyImpl
         serverConfiguration.addHttpHandler(
                 CLStaticHttpHandler(
                     WebServerGrizzlyImpl::class.java.getClassLoader(),
-                    "/META-INF/resources/webjars/swagger-ui/2.1.4/"
+                    "/META-INF/resources/webjars/swagger-ui/3.0.16/dist/"
                 ),
                 normalisePath("/docs")
         )

@@ -2,12 +2,7 @@ package org.maxur.sofarc.core.rest
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider
-import io.swagger.config.SwaggerConfig
-import io.swagger.jaxrs.config.DefaultJaxrsScanner
-import io.swagger.jaxrs.config.SwaggerContextService
-import io.swagger.models.Info
-import io.swagger.models.Scheme
-import io.swagger.models.Swagger
+import io.swagger.jaxrs.config.BeanConfig
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.jackson.JacksonFeature
 import org.glassfish.jersey.media.multipart.MultiPartFeature
@@ -70,30 +65,11 @@ abstract class RestResourceConfig(val name: String,  vararg val restPackages: St
     }
 
     private fun initSwagger(packages: MutableList<String>) {
-
-        val scanner = DefaultJaxrsScanner()
-
-        SwaggerContextService()
-                .withSwaggerConfig(object : SwaggerConfig {
-                    override fun configure(swagger: Swagger): Swagger {
-                        val info = Info()
-                        info.setTitle("Rest Resource")
-                        info.setVersion("1.0")
-                        swagger.info = info
-                        swagger.basePath = "/" + webConfig.apiPath
-                        swagger.host = "${webConfig.url.host}:${webConfig.url.port}"
-                        swagger.schemes = listOf(Scheme.HTTP)
-                        return swagger
-                    }
-
-                    override fun getFilterClass(): String? {
-                        return null
-                    }
-                })
-                .withScanner(scanner)
-                .initConfig()
-                .initScanner()
-
+        val config = BeanConfig()
+        config.basePath = "/" + webConfig.apiPath
+        config.host = "${webConfig.url.host}:${webConfig.url.port}"
+        config.resourcePackage = packages.joinToString(",")
+        config.scan = true
     }
 
     /**
