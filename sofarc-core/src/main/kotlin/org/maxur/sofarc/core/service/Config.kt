@@ -5,6 +5,7 @@ import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.annotation.Value
+import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import javax.inject.Singleton
 
 /**

@@ -5,7 +5,7 @@ package org.maxur.sofarc.params
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.service.ObjectMapperProvider
+import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

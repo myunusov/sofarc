@@ -19,6 +19,8 @@
         <jackson-module-kotlin.version>2.8.7</jackson-module-kotlin.version>
 
         <swagger.version>1.5.14</swagger.version>
+        <swagger-ui.version>3.0.14</swagger-ui.version>
+        <hal-browser.version>3325375</hal-browser.version>
     </properties>
 
     <dependencies>
@@ -324,9 +326,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.webjars.bower</groupId>
+            <groupId>org.webjars</groupId>
             <artifactId>swagger-ui</artifactId>
-            <version>3.0.16</version>
+            <version>${swagger-ui.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>hal-browser</artifactId>
+            <version>${hal-browser.version}</version>
         </dependency>
 
         <dependency>

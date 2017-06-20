@@ -2,7 +2,7 @@ package org.maxur.sofarc.core.service.grizzly.config
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.SerializationFeature
-import org.maxur.sofarc.core.service.ObjectMapperProvider
+import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import java.net.URI
 
 /**
@@ -12,12 +12,14 @@ import java.net.URI
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-data class WebAppConfig(
+class WebAppConfig(
         @JsonProperty("url") val url: URI,
-        @JsonProperty("static-content") val staticContent: Array<StaticContent>,
-        @JsonProperty("api-path") val apiPath: String
+        @JsonProperty("api-path") val apiPath: String,
+        @JsonProperty("static-content", required = false) staticContent: Array<StaticContent>?
 ) {
     val apiUri: URI = URI.create("$url/$apiPath")
+
+    val staticContent = staticContent ?: emptyArray()
 
     override fun toString(): String {
         val mapper = ObjectMapperProvider().provide()

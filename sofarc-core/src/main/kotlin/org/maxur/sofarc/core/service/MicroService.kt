@@ -31,8 +31,8 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
         try {
             postpone({
                 services.forEach { it.stop() }
+                afterStop()
             })
-            afterStop()
         } catch(e: Exception) {
             error(e)
         }
@@ -42,8 +42,16 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
      * Restart Service
      */
     fun restart() {
-        stop()
-        start()
+        try {
+            postpone({
+                services.forEach { it.stop() }
+                afterStop()
+                beforeStart()
+                services.forEach { it.start() }
+            })
+        } catch(e: Exception) {
+            error(e)
+        }
     }
 
     fun error(exception: Exception) {

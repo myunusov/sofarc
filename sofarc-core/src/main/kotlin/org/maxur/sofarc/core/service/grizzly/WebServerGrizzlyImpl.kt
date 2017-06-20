@@ -11,6 +11,7 @@ import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.rest.RestResourceConfig
 import org.maxur.sofarc.core.service.WebServer
+import org.maxur.sofarc.core.service.grizzly.config.StaticContent
 import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -58,7 +59,12 @@ open class WebServerGrizzlyImpl
         cfg.httpHandlersWithMapping.forEach {
             (_, regs) ->
             run {
-                regs.forEach { log.info("${webConfig.url}${it.contextPath}/") }
+                regs.filter { it.contextPath != "/docs" }.forEach {
+                    log.info("${webConfig.url}${it.contextPath}/")
+                }
+                regs.filter { it.contextPath == "/docs" }.forEach {
+                    log.info("${webConfig.url}${it.contextPath}/index.html?url=/api/swagger.json")
+                }
             }
         }
     }
@@ -86,22 +92,33 @@ open class WebServerGrizzlyImpl
         webConfig.staticContent.forEach {
             serverConfiguration.addHttpHandler(
                     StaticHttpHandler(it),
-                    normalisePath("/${it.path}")
+                    "/${it.normalisePath}"
             )
         }
-        // TODO default index.html?url=%2Fapi/swagger.json
-        serverConfiguration.addHttpHandler(
-                CLStaticHttpHandler(
-                    WebServerGrizzlyImpl::class.java.getClassLoader(),
-                    "/META-INF/resources/webjars/swagger-ui/3.0.16/dist/"
-                ),
-                normalisePath("/docs")
-        )
-    }
 
-    private fun normalisePath(path: String): String {
-        val ex = path.replace("/{2,}".toRegex(), "/")
-        return if (ex.endsWith("/")) ex.substring(0, ex.length - 1) else ex
+
+        // TODO default browser.html
+        val hal = StaticContent(
+                arrayOf("/META-INF/resources/webjars/hal-browser/3325375/"),
+                "/hal",
+                "browser.html"
+        )
+        serverConfiguration.addHttpHandler(
+                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.getClassLoader(), hal),
+                hal.normalisePath
+        )
+        
+        // TODO default index.html?url=%2Fapi/swagger.json
+        val doc = StaticContent(
+                arrayOf("/META-INF/resources/webjars/swagger-ui/3.0.14/"),
+                "/docs",
+                "index.html"
+        )
+
+        serverConfiguration.addHttpHandler(
+                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.getClassLoader(), doc),
+                doc.normalisePath
+        )
     }
 
 

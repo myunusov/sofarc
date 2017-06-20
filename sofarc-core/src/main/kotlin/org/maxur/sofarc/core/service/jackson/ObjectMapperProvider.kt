@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core.service.jackson
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.PropertyAccessor
@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.paranamer.ParanamerModule
 import org.glassfish.hk2.api.Factory
+import javax.ws.rs.core.Link
 
 
 class ObjectMapperProvider : Factory<ObjectMapper> {
@@ -22,7 +23,8 @@ class ObjectMapperProvider : Factory<ObjectMapper> {
                 .registerModule(KotlinModule())
                 .registerModule(Jdk8Module())
                 .registerModule(ParanamerModule())
-                .registerModule(JavaTimeModule())         
+                .registerModule(JavaTimeModule())
+                .addMixIn(Link::class.java, LinkMixin::class.java)
     }
 
     override fun dispose(instance: ObjectMapper?) {

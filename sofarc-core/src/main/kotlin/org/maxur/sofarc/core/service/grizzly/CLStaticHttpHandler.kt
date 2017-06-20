@@ -18,6 +18,7 @@ import org.glassfish.grizzly.http.util.Header
 import org.glassfish.grizzly.http.util.HttpStatus
 import org.glassfish.grizzly.memory.MemoryManager
 import org.glassfish.grizzly.utils.ArraySet
+import org.maxur.sofarc.core.service.grizzly.config.StaticContent
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -30,43 +31,47 @@ import java.util.logging.Level
 /**
  * [HttpHandler], which processes requests to a static resources resolved
  * by a given [ClassLoader].
-
- * @author Grizzly Team
- */
-class CLStaticHttpHandler
-/**
+ *
  * Create <tt>HttpHandler</tt>, which will handle requests
  * to the static resources resolved by the given class loader.
+ *
  * @param classLoader [ClassLoader] to be used to resolve the resources
- * *
- * @param docRoots the doc roots (path prefixes), which will be used
- * *          to find resources. Effectively each docRoot will be prepended
- * *          to a resource path before passing it to [ClassLoader.getResource].
- * *          If no <tt>docRoots</tt> are set - the resources will be searched starting
- * *          from [ClassLoader]'s root.
- * *
- * @throws IllegalArgumentException if one of the docRoots doesn't end with slash ('/')
+ * @param staticContent is the static content configuration
+ *
+ * @author Grizzly Team
+ * @author Maxim Yunusov
  */
-(
-        /**
-         * Returns the [ClassLoader] used to resolve the requested HTTP resources.
-         */
-        val classLoader: ClassLoader?,
-        vararg docRoots: String) : StaticHttpHandlerBase() {
+class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticContent) : AbstractStaticHttpHandler() {
+
     // path prefixes to be used
     private val docRoots = ArraySet(String::class.java)
 
+    /**
+     * default page
+     */
+    private val defaultPage: String
+
+    /**
+     *  This staticContent is the static content configuration
+     *  with
+     *      the root(s) - the doc roots (path prefixes), which will be used
+     *           to find resources. Effectively each docRoot will be prepended
+     *           to a resource path before passing it to [ClassLoader.getResource].
+     *           If no <tt>docRoots</tt> are set - the resources will be searched starting
+     *           from [ClassLoader]'s root.
+     *      the path    - url related to base url
+     *      and default page (index.html by default)
+     *  If the <tt>root</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+     *
+     *  IllegalArgumentException if one of the docRoots doesn't end with slash ('/')
+     */
     init {
-        if (classLoader == null) {
-            throw IllegalArgumentException("ClassLoader can not be null")
+        defaultPage = staticContent.page
+        val docRoots = staticContent.roots
+        if (docRoots.any({ !it.endsWith("/") })) {
+            throw IllegalArgumentException("Doc root should end with slash ('/')")
         }
         if (docRoots.isNotEmpty()) {
-            for (docRoot in docRoots) {
-                if (!docRoot.endsWith("/")) {
-                    throw IllegalArgumentException("Doc root should end with slash ('/')")
-                }
-            }
-
             this.docRoots.addAll(*docRoots)
         } else {
             this.docRoots.add("/")
@@ -77,166 +82,163 @@ class CLStaticHttpHandler
      * {@inheritDoc}
      */
     @Throws(Exception::class)
-    override fun handle(resourcePath: String,
-                        request: Request,
-                        response: Response): Boolean {
-        var resourcePath = resourcePath
+    override fun handle(resourcePath: String, request: Request, response: Response): Boolean {
 
-        var urlConnection: URLConnection? = null
-        var urlInputStream: InputStream? = null
-
-        if (resourcePath.startsWith(SLASH_STR)) {
-            resourcePath = resourcePath.substring(1)
+        var path = resourcePath
+        if (path.startsWith(SLASH_STR)) {
+            path = path.substring(1)
         }
 
-        var mayBeFolder = true
+        val mayBeFolder: Boolean
+        var url: URL?
 
-        if (resourcePath.isEmpty() || resourcePath.endsWith("/")) {
-            resourcePath += "index.html"
+        if (path.isEmpty() || path.endsWith("/")) {
+            path += defaultPage
             mayBeFolder = false
-        }
-
-        var url = lookupResource(resourcePath)
-
-        if (url == null && mayBeFolder && CHECK_NON_SLASH_TERMINATED_FOLDERS) {
-            // some ClassLoaders return null if a URL points to a folder.
-            // So try to add index.html to double-check.
-            // For example null will be returned for a folder inside a jar file.
-            url = lookupResource(resourcePath + "/index.html")
-            mayBeFolder = false
-        }
-
-        var fileResource: File? = null
-        var filePath: String? = null
-        var found = false
-
-        if (url != null) {
-            // url may point to a folder or a file
-            if ("file" == url.protocol) {
-                val file = File(url.toURI())
-
-                if (file.exists()) {
-                    if (file.isDirectory) {
-                        val welcomeFile = File(file, "/index.html")
-                        if (welcomeFile.exists() && welcomeFile.isFile) {
-                            fileResource = welcomeFile
-                            filePath = welcomeFile.path
-                            found = true
-                        }
-                    } else {
-                        fileResource = file
-                        filePath = file.path
-                        found = true
-                    }
-                }
+            url = lookupResource(path)
+        } else {
+            url = lookupResource(path)
+            if (url == null && CHECK_NON_SLASH_TERMINATED_FOLDERS) {
+                // So try to add index.html to double-check.
+                // For example null will be returned for a folder inside a jar file.
+                url = lookupResource("$path/$defaultPage")
+                // some ClassLoaders return null if a URL points to a folder.
+                mayBeFolder = false
             } else {
-                urlConnection = url.openConnection()
-                if ("jar" == url.protocol) {
-                    val jarUrlConnection = urlConnection as JarURLConnection?
-                    var jarEntry: JarEntry? = jarUrlConnection!!.jarEntry
-                    val jarFile = jarUrlConnection.jarFile
-                    // check if this is not a folder
-                    // we can't rely on jarEntry.isDirectory() because of http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6233323
-                    var iinputStream: InputStream? = jarFile.getInputStream(jarEntry)
-
-                    if (jarEntry!!.isDirectory || iinputStream == null) { // it's probably a folder
-                        val welcomeResource = if (jarEntry.name.endsWith("/"))
-                            jarEntry.name + "index.html"
-                        else
-                            jarEntry.name + "/index.html"
-
-                        jarEntry = jarFile.getJarEntry(welcomeResource)
-                        if (jarEntry != null) {
-                            iinputStream = jarFile.getInputStream(jarEntry)
-                        }
-                    }
-
-                    if (iinputStream != null) {
-                        urlInputStream = JarURLInputStream(jarUrlConnection,
-                                jarFile, iinputStream)
-
-                        assert(jarEntry != null)
-                        filePath = jarEntry!!.name
-                        found = true
-                    } else {
-                        closeJarFileIfNeeded(jarUrlConnection, jarFile)
-                    }
-                } else if ("bundle" == url.protocol) { // OSGi resource
-                    // it might be either folder or file
-                    if (mayBeFolder && urlConnection!!.contentLength <= 0) { // looks like a folder?
-                        // check if there's a welcome resource
-                        val welcomeUrl = classLoader!!.getResource(url.path + "/index.html")
-                        if (welcomeUrl != null) {
-                            url = welcomeUrl
-                            urlConnection = welcomeUrl.openConnection()
-                        }
-                    }
-
-                    found = true
-                } else {
-                    found = true
-                }
+                mayBeFolder = true
             }
         }
 
-        if (!found) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "Resource not found {0}", resourcePath)
-            }
+        if (url == null) {
+            fine("Resource not found $path")
             return false
         }
 
-        assert(url != null)
+        // url may point to a folder or a file
+        if ("file" == url.protocol) {
+            return onFile(url, request, response, path)
+        } else {
+            return onNotFile(url, mayBeFolder, path, request, response)
+        }
+    }
+
+    private fun onNotFile(url: URL, mayBeFolder: Boolean, path: String, request: Request, response: Response): Boolean {
+        var url1 = url
+        var urlInputStream: InputStream? = null
+        var found = false
+        var urlConnection: URLConnection? = url1.openConnection()
+        var filePath: String? = null
+        if ("jar" == url1.protocol) {
+            val jarUrlConnection = urlConnection as JarURLConnection?
+            var jarEntry: JarEntry? = jarUrlConnection!!.jarEntry
+            val jarFile = jarUrlConnection.jarFile
+            // check if this is not a folder
+            // we can't rely on jarEntry.isDirectory() because of http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6233323
+            var iinputStream: InputStream? = jarFile.getInputStream(jarEntry)
+
+            if (jarEntry!!.isDirectory || iinputStream == null) { // it's probably a folder
+                val welcomeResource = if (jarEntry.name.endsWith("/"))
+                    "${jarEntry.name}$defaultPage"
+                else
+                    "${jarEntry.name}/$defaultPage"
+
+                jarEntry = jarFile.getJarEntry(welcomeResource)
+                if (jarEntry != null) {
+                    iinputStream = jarFile.getInputStream(jarEntry)
+                }
+            }
+
+            if (iinputStream != null) {
+                urlInputStream = JarURLInputStream(jarUrlConnection,
+                        jarFile, iinputStream)
+
+                assert(jarEntry != null)
+                filePath = jarEntry!!.name
+                found = true
+            } else {
+                closeJarFileIfNeeded(jarUrlConnection, jarFile)
+            }
+        } else if ("bundle" == url1.protocol) { // OSGi resource
+            // it might be either folder or file
+            if (mayBeFolder && urlConnection!!.contentLength <= 0) { // looks like a folder?
+                // check if there's a welcome resource
+                val welcomeUrl = classLoader.getResource("${url1.path}/$defaultPage")
+                if (welcomeUrl != null) {
+                    url1 = welcomeUrl
+                    urlConnection = welcomeUrl.openConnection()
+                }
+            }
+            found = true
+        } else {
+            found = true
+        }
+
+        if (!found) {
+            fine("Resource not found $path")
+            return false
+        }
 
         // If it's not HTTP GET - return method is not supported status
         if (Method.GET != request.method) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "Resource found {0}, but HTTP method {1} is not allowed",
-                        arrayOf(resourcePath, request.method))
-            }
-            response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405)
-            response.setHeader(Header.Allow, "GET")
+            returnMethodIsNotAllowed(path, request, response)
             return true
         }
 
-        StaticHttpHandlerBase.pickupContentType(response,
-                if (filePath != null) filePath else url!!.path)
+        pickupContentType(response, if (filePath != null) filePath else url1.path)
 
-        if (fileResource != null) {
-            addToFileCache(request, response, fileResource)
-            StaticHttpHandlerBase.sendFile(response, fileResource)
-        } else {
-            assert(urlConnection != null)
 
-            // if it's not a jar file - we don't know what to do with that
-            // so not adding it to the file cache
-            if ("jar" == url!!.protocol) {
-                val jarFile = getJarFile(
-                        // we need that because url.getPath() may have url encoded symbols,
-                        // which are getting decoded when calling uri.getPath()
-                        URI(url.path).path
-                )
+        assert(urlConnection != null)
 
-                addTimeStampEntryToFileCache(request, response, jarFile)
-            }
+        // if it's not a jar file - we don't know what to do with that
+        // so not adding it to the file cache
+        if ("jar" == url1.protocol) {
+            val jarFile = getJarFile(
+                    // we need that because url.getPath() may have url encoded symbols,
+                    // which are getting decoded when calling uri.getPath()
+                    URI(url1.path).path
+            )
 
-            sendResource(response,
-                    if (urlInputStream != null)
-                        urlInputStream
-                    else
-                        urlConnection!!.getInputStream())
+            addTimeStampEntryToFileCache(request, response, jarFile)
         }
 
+        sendResource(response,
+                if (urlInputStream != null)
+                    urlInputStream
+                else
+                    urlConnection!!.getInputStream())
         return true
+    }
+
+    private fun onFile(url: URL, request: Request, response: Response, path: String): Boolean {
+        val result: File? = respondedFile(url)
+        if (result != null) {
+            processFile(request, result, response)
+            return true
+        } else {
+            fine("Resource not found $path")
+            return false
+        }
+    }
+
+    private fun respondedFile(url: URL): File? {
+        val file = File(url.toURI())
+        if (file.exists()) {
+            if (file.isDirectory) {
+                val welcomeFile = File(file, "/$defaultPage")
+                if (welcomeFile.exists() && welcomeFile.isFile) {
+                    return welcomeFile
+                }
+            } else {
+                return file
+            }
+        }
+        return null
     }
 
     private fun lookupResource(resourcePath: String): URL? {
         val docRootsLocal = docRoots.array
         if (docRootsLocal == null || docRootsLocal.isEmpty()) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "No doc roots registered -> resource {0} is not found ", resourcePath)
-            }
-
+            fine("No doc roots registered -> resource $resourcePath is not found ")
             return null
         }
 
@@ -249,7 +251,7 @@ class CLStaticHttpHandler
             }
 
             val fullPath = docRootPart + resourcePath
-            val url = classLoader?.getResource(fullPath)
+            val url = classLoader.getResource(fullPath)
 
             if (url != null) {
                 return url
@@ -298,7 +300,14 @@ class CLStaticHttpHandler
 
     private class NonBlockingDownloadHandler internal constructor(private val response: Response,
                                                                   private val outputStream: NIOOutputStream,
-                                                                  private val inputStream: InputStream, private val chunkSize: Int) : WriteHandler {
+                                                                  private val inputStream: InputStream,
+                                                                  private val chunkSize: Int
+    ) : WriteHandler {
+
+        companion object {
+            private val log = Grizzly.logger(NonBlockingDownloadHandler::class.java)
+        }
+
         private val mm: MemoryManager<*>
 
         init {
@@ -307,7 +316,7 @@ class CLStaticHttpHandler
 
         @Throws(Exception::class)
         override fun onWritePossible() {
-            LOGGER.log(Level.FINE, "[onWritePossible]")
+            log.log(Level.FINE, "[onWritePossible]")
             // send CHUNK of data
             val isWriteMore = sendChunk()
 
@@ -318,7 +327,7 @@ class CLStaticHttpHandler
         }
 
         override fun onError(t: Throwable) {
-            LOGGER.log(Level.FINE, "[onError] ", t)
+            log.log(Level.FINE, "[onError] ", t)
             response.setStatus(500, t.message)
             complete(true)
         }
@@ -439,18 +448,21 @@ class CLStaticHttpHandler
     }
 
     companion object {
-        private val LOGGER = Grizzly.logger(CLStaticHttpHandler::class.java)
 
-        protected val CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP = CLStaticHttpHandler::class.java.name + ".check-non-slash-terminated-folders"
+        protected val CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP =
+                CLStaticHttpHandler::class.java.name + ".check-non-slash-terminated-folders"
 
         /**
          * <tt>true</tt> (default) if we want to double-check the resource requests,
          * that don't have terminating slash if they represent a folder and try
          * to retrieve a welcome resource from the folder.
          */
-        private val CHECK_NON_SLASH_TERMINATED_FOLDERS = System.getProperty(CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP) == null || java.lang.Boolean.getBoolean(CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP)
+        private val CHECK_NON_SLASH_TERMINATED_FOLDERS =
+                System.getProperty(CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP) == null ||
+                        java.lang.Boolean.getBoolean(CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP)
 
         private val SLASH_STR = "/"
+
         private val EMPTY_STR = ""
 
         @Throws(IOException::class)
