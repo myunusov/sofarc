@@ -1,14 +1,14 @@
 package org.maxur.sofarc.core.rest
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import dk.nykredit.jackson.dataformat.hal.HALLink
+import dk.nykredit.jackson.dataformat.hal.annotation.Link
+import dk.nykredit.jackson.dataformat.hal.annotation.Resource
 import io.swagger.annotations.*
 import org.maxur.sofarc.core.service.MicroService
+import java.net.URI
 import javax.inject.Inject
 import javax.ws.rs.*
-import javax.ws.rs.core.Link
 import javax.ws.rs.core.MediaType
-
-
 
 
 /**
@@ -23,8 +23,9 @@ import javax.ws.rs.core.MediaType
 class ServiceResource @Inject constructor(val service: MicroService) {
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Represent this service", response = ServiceView::class)
+    @Produces("application/hal+json")
+    @ApiOperation(value = "Represent this service",
+            response = ServiceView::class, produces = "application/hal+json")
     @ApiResponses(value = *arrayOf(
             ApiResponse(code = 200, message = "Successful operation"),
             ApiResponse(code = 500, message = "Internal server error")
@@ -59,21 +60,23 @@ class ServiceResource @Inject constructor(val service: MicroService) {
 
 }
 
+@Suppress("unused")
+@Resource
 @ApiModel(value="Service View", description="Service Presentation Model")
 class ServiceView(service: MicroService) {
 
     @ApiModelProperty(value = "Service name")
     val name: String = service.name
 
-    @Transient
-    @JsonProperty("_links")
-    val links: MutableList<Link> = ArrayList()
-    
-    init {
-        links.add(Link.fromPath("/api/service").rel("self").build())
-        links.add(Link.fromPath("/api/service/stop").rel("stop").build())
-        links.add(Link.fromPath("/api/service/restart").rel("restart").build())
-    }
+    @Link
+    var self: HALLink = HALLink.Builder(URI("service")).build()
+
+    @Link("stop")
+    var stop: HALLink = HALLink.Builder(URI("service/stop")).build()
+
+    @Link("restart")
+    var restart: HALLink = HALLink.Builder(URI("service/restart")).build()
+
 
 }
 

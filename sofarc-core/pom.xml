@@ -21,6 +21,7 @@
         <swagger.version>1.5.14</swagger.version>
         <swagger-ui.version>3.0.14</swagger-ui.version>
         <hal-browser.version>3325375</hal-browser.version>
+        <jackson-dataformat-hal.version>1.0.1</jackson-dataformat-hal.version>
     </properties>
 
     <dependencies>
@@ -256,6 +257,17 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>dk.nykredit.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-hal</artifactId>
+            <version>${jackson-dataformat-hal.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <!-- Grizzly2 -->
         <dependency>
@@ -342,6 +354,8 @@
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
         </dependency>
+
+
     </dependencies>
 
     <build>

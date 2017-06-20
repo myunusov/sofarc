@@ -7,8 +7,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.paranamer.ParanamerModule
+import dk.nykredit.jackson.dataformat.hal.JacksonHALModule
 import org.glassfish.hk2.api.Factory
-import javax.ws.rs.core.Link
 
 
 class ObjectMapperProvider : Factory<ObjectMapper> {
@@ -24,7 +24,7 @@ class ObjectMapperProvider : Factory<ObjectMapper> {
                 .registerModule(Jdk8Module())
                 .registerModule(ParanamerModule())
                 .registerModule(JavaTimeModule())
-                .addMixIn(Link::class.java, LinkMixin::class.java)
+                .registerModule(JacksonHALModule())
     }
 
     override fun dispose(instance: ObjectMapper?) {
