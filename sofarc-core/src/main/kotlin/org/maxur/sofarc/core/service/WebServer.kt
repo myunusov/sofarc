@@ -11,7 +11,7 @@ import java.net.URI
  * @since <pre>12.06.2017</pre>
  */
 @Contract
-abstract class WebServer(val baseUri: URI, val apiPath: String): EmbeddedService {
+abstract class WebServer(val baseUri: URI): EmbeddedService {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)

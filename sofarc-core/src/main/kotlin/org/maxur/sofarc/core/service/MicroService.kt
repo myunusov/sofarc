@@ -1,23 +1,106 @@
+@file:Suppress("unused")
+
 package org.maxur.sofarc.core.service
 
-import org.jvnet.hk2.annotations.Contract
-import java.util.*
-import kotlin.concurrent.schedule
+import org.jvnet.hk2.annotations.Service
+import java.util.concurrent.Executors
+import javax.inject.Inject
+
 
 /**
  * @author myunusov
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-@Contract
-abstract class MicroService(val name: String, vararg val services: EmbeddedService) {
+@Service
+class MicroService @Inject constructor() {
 
+    private var nameFunc: () -> String = { "Unknown" }
+
+    private var configFunc: () -> Any = { Unit }
+
+    private var servicesFuncs: MutableList<() -> EmbeddedService> = mutableListOf()
+
+    lateinit var name: String
+
+    lateinit var config: Any
+
+    lateinit var services: List<EmbeddedService>
+
+    /**
+     * on start event
+     */
+    lateinit var beforeStart: (MicroService) -> Unit
+
+    /**
+     * on stop event
+     */
+    lateinit var afterStop: (MicroService) -> Unit
+
+    /**
+     * on error event
+     */
+    lateinit var onError: (MicroService, Exception) -> Unit
+
+    fun beforeStart(func : (MicroService) -> Unit): MicroService {
+        beforeStart = func
+        return this
+    }
+
+    fun afterStop(func : (MicroService) -> Unit): MicroService {
+        afterStop = func
+        return this
+    }
+
+    fun onError(func : (MicroService, Exception) -> Unit): MicroService {
+        onError = func
+        return this
+    }
+    fun name(value: String): MicroService {
+        nameFunc = { value }
+        return this
+    }
+
+    fun name(func: () -> String): MicroService {
+        nameFunc = func
+        return this
+    }
+
+    fun embedded(vararg value: EmbeddedService): MicroService {
+        value.forEach { servicesFuncs.add( { it } ) }
+        return this
+    }
+
+    fun embedded(func: () -> EmbeddedService): MicroService {
+        servicesFuncs.add(func)
+        return this
+    }
+
+    fun <T> config(value: T): MicroService {
+        configFunc = { value!! }
+        return this
+    }
+
+    fun <T> config(func: () -> T): MicroService {
+        @Suppress("UNCHECKED_CAST")
+        configFunc =  func as () -> Any
+        return this
+    }
+
+    fun <T> config(): T {
+        @Suppress("UNCHECKED_CAST")
+       return config as T
+    }
+    
     /**
      * Start Service
      */
     fun start() {
+        name = nameFunc.invoke()
+        config = configFunc.invoke()
+        services =  servicesFuncs.map { it.invoke() }
         try {
-            beforeStart()
+            beforeStart.invoke(this)
             services.forEach { it.start() }
         } catch(e: Exception) {
             error(e)
@@ -31,7 +114,7 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
         try {
             postpone({
                 services.forEach { it.stop() }
-                afterStop()
+                afterStop.invoke(this)
             })
         } catch(e: Exception) {
             error(e)
@@ -45,8 +128,8 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
         try {
             postpone({
                 services.forEach { it.stop() }
-                afterStop()
-                beforeStart()
+                afterStop.invoke(this)
+                beforeStart.invoke(this)
                 services.forEach { it.start() }
             })
         } catch(e: Exception) {
@@ -55,33 +138,23 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
     }
 
     fun error(exception: Exception) {
-        onError(exception)
+        onError.invoke(this, exception)
     }
 
 
-    private fun postpone(func: Function<Unit>) {
-        Timer("schedule", true).schedule(1000) {
-            (func as () -> Unit).invoke()
+    private fun postpone(func: () -> Unit) {
+        val pool = Executors.newSingleThreadExecutor { runnable ->
+            val thread = Executors.defaultThreadFactory().newThread(runnable)
+            thread.isDaemon = false
+            thread
         }
+        pool.submit {
+            Thread.sleep(1000)
+            func.invoke()
+        }
+        pool.shutdown()
     }
-    
 
-    /**
-     * on start event
-     */
-    abstract protected fun beforeStart()
-
-    /**
-     * on stop event
-     */
-    abstract protected fun afterStop()
-
-    /**
-     * on error event
-     *
-     * @param exception The exception associated with this failure
-     */
-    abstract protected fun onError(exception:Exception)
 
     /**
      * Represent State of micro-service
@@ -102,7 +175,7 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
 
             fun from(value: String): State {
                 val case = value.toUpperCase()
-                if (case in State::class.java.getEnumConstants().map { e -> e.name }) {
+                if (case in State::class.java.enumConstants.map { e -> e.name }) {
                     return State.valueOf(case)
                 } else {
                     throw IllegalArgumentException("The '$value' is not acceptable Application State")
@@ -111,4 +184,5 @@ abstract class MicroService(val name: String, vararg val services: EmbeddedServi
         }
 
     }
+
 }

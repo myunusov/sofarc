@@ -38,7 +38,7 @@ open class WebServerGrizzlyImpl
         @Value(key = "webapp") val webConfig: WebAppConfig,
         val config: RestResourceConfig,
         val locator: ServiceLocator
-) : WebServer(webConfig.url, webConfig.apiPath) {
+) : WebServer(webConfig.url) {
 
 
     companion object {

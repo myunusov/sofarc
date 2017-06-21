@@ -1,14 +1,16 @@
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core.service.hk2
 
-import org.glassfish.hk2.api.*
-import org.glassfish.hk2.utilities.BuilderHelper
+import org.glassfish.hk2.api.Injectee
+import org.glassfish.hk2.api.InjectionResolver
+import org.glassfish.hk2.api.ServiceHandle
 import org.maxur.sofarc.core.annotation.Value
+import org.maxur.sofarc.core.service.PropertiesService
+import org.maxur.sofarc.core.service.PropertiesServiceHolder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Type
-import javax.annotation.PostConstruct
 import javax.inject.Inject
 
 
@@ -19,27 +21,12 @@ import javax.inject.Inject
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-class ConfigurationInjectionResolver @Inject constructor(
-        val propertiesServices: IterableProvider<PropertiesService>,
-        val locator: ServiceLocator
-) : InjectionResolver<Value> {
+class ConfigurationInjectionResolver @Inject constructor(holder: PropertiesServiceHolder) : InjectionResolver<Value> {
 
-    lateinit var propertiesService: PropertiesService
+    val propertiesService: PropertiesService = holder.propertiesService
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(ConfigurationInjectionResolver::class.java)
-    }
-
-    @PostConstruct
-    fun init() {
-        if (propertiesServices.size == 1) {
-            propertiesService = propertiesServices.get()
-            val filter = BuilderHelper.createContractFilter(PropertiesService::class.java.name)
-            val descriptors: List<ActiveDescriptor<*>> = locator.getDescriptors(filter)
-            log.info("Configuration Properties Service is '${descriptors.get(0).name}'")
-        } else {
-            throw IllegalStateException("More than one Configuration Properties Service is found")
-        }
     }
 
     override fun resolve(injectee: Injectee, root: ServiceHandle<*>?): Any {
