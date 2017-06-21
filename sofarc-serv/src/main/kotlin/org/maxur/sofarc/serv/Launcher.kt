@@ -23,18 +23,20 @@ object Launcher {
     /**
      * Command line entry point. This method kicks off the building of a application  object
      * and executes it.
-
+            service {
+                    name : ${name}
+                    config {
+                        format: Hocon
+                    }
+                    webServer:    Grizzly
+                }.start
      * @param args - arguments of command.
      */
-    @JvmStatic fun main(args: Array<String>)  /*
-          service {
-            name : ${name}
-            configFormat: Hocon
-            webServer:    Grizzly
-          }.start
-         */ {
+    @JvmStatic fun main(args: Array<String>)  {
         service()
                 .name(property("name"))
+                //.config(fromClasspass().type("Hocon").root("SYS").to(ConfigParams::class.java))
+                //.config(fromFile("file.yaml").to(ConfigParams::class.java))
                 .configFrom(configSource("Hocon"))
                 .configTo(configClass(ConfigParams::class.java))
                 .embedded(webService("Grizzly"))

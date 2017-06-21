@@ -72,20 +72,12 @@ class ConfigurationInjectionResolver @Inject constructor(holder: PropertiesServi
 
 
     private fun resolveByKey(name: String, type: Type): Any? {
-        when (type.typeName) {
-            "java.lang.String" -> return propertiesService.asString(name)
-            "java.lang.Integer" -> return propertiesService.asInteger(name)
-            "java.lang.Long" -> return propertiesService.asLong(name)
-            "java.net.URI" -> return propertiesService.asURI(name)
-            else -> {
-                if (type is Class<*>) {
-                    return propertiesService.asObject(name, type)
-                }
-                val msg = "Unsupported property type ${type.typeName}"
-                log.error(msg)
-                throw IllegalStateException(msg)
-            }
+        if (!(type is Class<*>)) {
+            val msg = "Unsupported property type '${type.typeName}'"
+            log.error(msg)
+            throw IllegalStateException(msg)
         }
+        return propertiesService.read(name, type)
     }
 
     override fun isConstructorParameterIndicator(): Boolean {

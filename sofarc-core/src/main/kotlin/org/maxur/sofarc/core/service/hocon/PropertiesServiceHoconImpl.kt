@@ -56,6 +56,16 @@ class PropertiesServiceHoconImpl : PropertiesService {
         }
     }
 
+    override fun read(key: String, clazz: Class<*>): Any? {
+        when (clazz.typeName) {
+            "java.lang.String" -> return asString(key)
+            "java.lang.Integer" -> return asInteger(key)
+            "java.lang.Long" -> return asLong(key)
+            "java.net.URI" -> return asURI(key)
+            else -> return asObject(key, clazz)
+        }
+    }
+
     override fun asURI(key: String): URI? {
         val string = asString(key)
         return when (string) {
@@ -64,9 +74,9 @@ class PropertiesServiceHoconImpl : PropertiesService {
         }
     }
 
-    override fun asObject(key: String, clazz: Class<*>): Any? {
+    private fun asObject(key: String, clazz: Class<*>): Any? {
         try {
-            val configObject: ConfigObject? = findValue(Function {it?.getObject(key)})
+            val configObject: ConfigObject? = findValue(Function { it?.getObject(key) })
             if (configObject != null) {
                 return objectMapper.readValue(configObject.render(), clazz)
             } else {
