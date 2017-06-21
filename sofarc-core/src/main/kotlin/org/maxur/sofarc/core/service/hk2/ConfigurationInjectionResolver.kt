@@ -5,7 +5,6 @@ import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.ServiceHandle
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.PropertiesService
-import org.maxur.sofarc.core.service.PropertiesServiceHolder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Constructor

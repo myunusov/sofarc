@@ -1,7 +1,11 @@
 package org.maxur.sofarc.serv
 
 import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.hk2.DSL
+import org.maxur.sofarc.core.service.hk2.DSL.configClass
+import org.maxur.sofarc.core.service.hk2.DSL.configSource
+import org.maxur.sofarc.core.service.hk2.DSL.property
+import org.maxur.sofarc.core.service.hk2.DSL.service
+import org.maxur.sofarc.core.service.hk2.DSL.webService
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 
@@ -29,17 +33,17 @@ object Launcher {
             webServer:    Grizzly
           }.start
          */ {
-        DSL.service()
-                .name(DSL.property("name"))
-                .config(DSL.hoconConfigTo(ConfigParams::class.java))
-                .embedded(DSL.webService("Grizzly"))
+        service()
+                .name(property("name"))
+                .configFrom(configSource("Hocon"))
+                .configTo(configClass(ConfigParams::class.java))
+                .embedded(webService("Grizzly"))
                 .beforeStart( { ms ->  beforeStart(ms) })
                 .afterStop( { ms ->  afterStop(ms) })
                 .onError( { ms, e ->  onError(ms, e) })
                 .start()
     }
-
-
+    
     fun beforeStart(service: MicroService) {
         (service.config as ConfigParams).log()
         log().info("${service.name} is started")

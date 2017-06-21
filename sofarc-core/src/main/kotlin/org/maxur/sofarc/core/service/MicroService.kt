@@ -4,7 +4,6 @@ package org.maxur.sofarc.core.service
 
 import org.jvnet.hk2.annotations.Service
 import java.util.concurrent.Executors
-import javax.inject.Inject
 
 
 /**
@@ -13,18 +12,21 @@ import javax.inject.Inject
  * @since <pre>12.06.2017</pre>
  */
 @Service
-class MicroService @Inject constructor() {
+class MicroService {
 
-    private var nameFunc: () -> String = { "Unknown" }
-
-    private var configFunc: () -> Any = { Unit }
-
-    private var servicesFuncs: MutableList<() -> EmbeddedService> = mutableListOf()
-
+    /**
+     * The Service Name
+     */
     lateinit var name: String
 
+    /**
+     * The Service Config
+     */
     lateinit var config: Any
 
+    /**
+     * List of embedded services
+     */
     lateinit var services: List<EmbeddedService>
 
     /**
@@ -42,63 +44,10 @@ class MicroService @Inject constructor() {
      */
     lateinit var onError: (MicroService, Exception) -> Unit
 
-    fun beforeStart(func : (MicroService) -> Unit): MicroService {
-        beforeStart = func
-        return this
-    }
-
-    fun afterStop(func : (MicroService) -> Unit): MicroService {
-        afterStop = func
-        return this
-    }
-
-    fun onError(func : (MicroService, Exception) -> Unit): MicroService {
-        onError = func
-        return this
-    }
-    fun name(value: String): MicroService {
-        nameFunc = { value }
-        return this
-    }
-
-    fun name(func: () -> String): MicroService {
-        nameFunc = func
-        return this
-    }
-
-    fun embedded(vararg value: EmbeddedService): MicroService {
-        value.forEach { servicesFuncs.add( { it } ) }
-        return this
-    }
-
-    fun embedded(func: () -> EmbeddedService): MicroService {
-        servicesFuncs.add(func)
-        return this
-    }
-
-    fun <T> config(value: T): MicroService {
-        configFunc = { value!! }
-        return this
-    }
-
-    fun <T> config(func: () -> T): MicroService {
-        @Suppress("UNCHECKED_CAST")
-        configFunc =  func as () -> Any
-        return this
-    }
-
-    fun <T> config(): T {
-        @Suppress("UNCHECKED_CAST")
-       return config as T
-    }
-    
     /**
      * Start Service
      */
     fun start() {
-        name = nameFunc.invoke()
-        config = configFunc.invoke()
-        services =  servicesFuncs.map { it.invoke() }
         try {
             beforeStart.invoke(this)
             services.forEach { it.start() }
