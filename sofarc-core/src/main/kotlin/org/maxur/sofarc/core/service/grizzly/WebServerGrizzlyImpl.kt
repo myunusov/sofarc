@@ -39,8 +39,7 @@ open class WebServerGrizzlyImpl
         val config: RestResourceConfig,
         val locator: ServiceLocator
 ) : WebServer(webConfig.url) {
-
-
+    
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
@@ -59,11 +58,18 @@ open class WebServerGrizzlyImpl
         cfg.httpHandlersWithMapping.forEach {
             (_, regs) ->
             run {
-                regs.filter { it.contextPath != "/docs" }.forEach {
-                    log.info("${webConfig.url}${it.contextPath}/")
+                for (reg in regs) {
+                    val basePath = "${webConfig.url}${reg.contextPath}"
+                    when {
+                        reg.contextPath == "/docs" && webConfig.withSwaggerUi ->
+                            log.info("$basePath/index.html?url=/api/swagger.json")
+                        reg.contextPath == "/hal" && webConfig.withHalBrowser ->
+                            log.info("$basePath/#/api/service")
+                        else -> log.info("$basePath/")
+                    }
                 }
                 regs.filter { it.contextPath == "/docs" }.forEach {
-                    log.info("${webConfig.url}${it.contextPath}/index.html?url=/api/swagger.json")
+
                 }
             }
         }
@@ -96,19 +102,16 @@ open class WebServerGrizzlyImpl
             )
         }
 
+        if (webConfig.withHalBrowser) {
+            addSwaggerUi(serverConfiguration)
+        }
 
-        // TODO default browser.html
-        val hal = StaticContent(
-                arrayOf("/META-INF/resources/webjars/hal-browser/3325375/"),
-                "/hal",
-                "browser.html"
-        )
-        serverConfiguration.addHttpHandler(
-                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.getClassLoader(), hal),
-                hal.normalisePath
-        )
-        
-        // TODO default index.html?url=%2Fapi/swagger.json
+        if (webConfig.withSwaggerUi) {
+            addHalBrowser(serverConfiguration)
+        }
+    }
+
+    private fun addHalBrowser(serverConfiguration: ServerConfiguration) {
         val doc = StaticContent(
                 arrayOf("/META-INF/resources/webjars/swagger-ui/3.0.14/"),
                 "/docs",
@@ -118,6 +121,18 @@ open class WebServerGrizzlyImpl
         serverConfiguration.addHttpHandler(
                 CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.getClassLoader(), doc),
                 doc.normalisePath
+        )
+    }
+
+    private fun addSwaggerUi(serverConfiguration: ServerConfiguration) {
+        val hal = StaticContent(
+                arrayOf("/META-INF/resources/webjars/hal-browser/3325375/"),
+                "/hal",
+                "browser.html"
+        )
+        serverConfiguration.addHttpHandler(
+                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.getClassLoader(), hal),
+                hal.normalisePath
         )
     }
 

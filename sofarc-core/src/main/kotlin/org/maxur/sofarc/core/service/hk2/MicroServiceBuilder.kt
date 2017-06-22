@@ -12,11 +12,9 @@ class MicroServiceBuilder(vararg binders: Binder) {
     @Suppress("CanBePrimaryConstructorProperty")
     private val binders: Array<out Binder> = binders
 
+    lateinit private var configSource: ConfigSource
+
     private var nameFunc: () -> String = { "Unknown" }
-
-    private var formatFunc: () -> ConfigSource = { ConfigSource("Hocon") }
-
-    private var configFunc: () -> Any = { Unit }
 
     private var servicesFuncs: MutableList<() -> EmbeddedService> = mutableListOf()
 
@@ -56,29 +54,13 @@ class MicroServiceBuilder(vararg binders: Binder) {
         return this
     }
 
-    fun embedded(func: () -> EmbeddedService): MicroServiceBuilder {
+    fun embed(func: () -> EmbeddedService): MicroServiceBuilder {
         servicesFuncs.add(func)
         return this
     }
 
-    fun <T> configTo(value: T): MicroServiceBuilder {
-        configFunc = { value!! }
-        return this
-    }
-
-    fun <T> configTo(func: () -> T): MicroServiceBuilder {
-        @Suppress("UNCHECKED_CAST")
-        configFunc = func as () -> Any
-        return this
-    }
-
-    fun configFrom(value: ConfigSource): MicroServiceBuilder {
-        formatFunc = { value }
-        return this
-    }
-
-    fun configFrom(func: () -> ConfigSource): MicroServiceBuilder {
-        formatFunc = func
+    fun config(value: ConfigSource): MicroServiceBuilder {
+        configSource = value
         return this
     }
 
@@ -86,16 +68,15 @@ class MicroServiceBuilder(vararg binders: Binder) {
      * Start Service
      */
     fun start() {
-        val locator = DSL.newLocator(formatFunc.invoke(), *binders)
+        val locator = DSL.newLocator(configSource, *binders)
         val service = locator.getService<MicroService>(MicroService::class.java)
         service.name = nameFunc.invoke()
-        service.config = configFunc.invoke()
+        service.config = locator.getService<Any>(configSource.structure)
         service.services = servicesFuncs.map { it.invoke() }
         service.beforeStart = beforeStart
         service.afterStop = afterStop
         service.onError = onError
         service.start()
     }
-
-
+    
 }

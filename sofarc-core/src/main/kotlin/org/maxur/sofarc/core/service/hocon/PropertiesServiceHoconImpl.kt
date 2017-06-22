@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
 import org.jvnet.hk2.annotations.Service
+import org.maxur.sofarc.core.service.ConfigSource
 import org.maxur.sofarc.core.service.PropertiesService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ import java.io.IOException
 import java.net.URI
 import java.util.function.Function
 import javax.annotation.PostConstruct
+import javax.inject.Inject
 
 /**
  * The type Properties service hocon.
@@ -27,7 +29,7 @@ import javax.annotation.PostConstruct
  * @since <pre>9/2/2015</pre>
  */
 @Service(name = "Hocon")
-class PropertiesServiceHoconImpl : PropertiesService {
+class PropertiesServiceHoconImpl @Inject constructor(val source: ConfigSource) : PropertiesService {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(PropertiesServiceHoconImpl::class.java)
@@ -37,22 +39,16 @@ class PropertiesServiceHoconImpl : PropertiesService {
 
     private var defaultConfig: Config? = null
 
-    private var userConfig: Config? = null
-
     /**
      * init post construct
      */
     @PostConstruct
     fun init() {
         try {
-            defaultConfig = ConfigFactory.load().getConfig("DEFAULTS")
+            defaultConfig = ConfigFactory.load().getConfig(source.rootKey)
         } catch(e: ConfigException.Missing) {
-            log.error("The DEFAULT config not found. Add application.conf with DEFAULT section to classpath")
-        }
-        try {
-            userConfig = ConfigFactory.load().getConfig("CUSTOMER")
-        } catch(e: ConfigException.Missing) {
-            log.error("The CUSTOMER config not found. Add user.conf with CUSTOMER section to conf folder")
+            log.error("The '${source.rootKey}' config not found. " +
+                    "Add application.conf with '${source.rootKey}' section to classpath")
         }
     }
 
@@ -113,13 +109,6 @@ class PropertiesServiceHoconImpl : PropertiesService {
     }
 
     private fun <T> findValue(transform: Function<Config?, T?>): T? {
-        try {
-            if (userConfig != null) {
-                return transform.apply(userConfig)
-            }
-        } catch (e: ConfigException.Missing) {
-            log.debug(e.message, e)
-        }
         return transform.apply(defaultConfig)
     }
 

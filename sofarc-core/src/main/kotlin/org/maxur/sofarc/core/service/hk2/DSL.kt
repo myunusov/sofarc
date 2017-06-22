@@ -31,7 +31,7 @@ object DSL {
         }
     }
 
-    fun property(key: String): () -> String {
+    fun cfg(key: String): () -> String {
         return {
             this.locator
                     .getService<PropertiesServiceHolder>(PropertiesServiceHolder::class.java)
@@ -39,16 +39,5 @@ object DSL {
         }
     }
 
-    fun <T> configClass(result: Class<T>): () -> T {
-        return {
-            this.locator.getService<T>(result)
-        }
-    }
-
-    fun configSource(format: String): () -> ConfigSource {
-        return {
-            ConfigSource(format)
-        }
-    }
 
 }

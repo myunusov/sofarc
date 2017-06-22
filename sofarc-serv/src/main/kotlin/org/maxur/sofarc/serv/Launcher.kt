@@ -1,9 +1,8 @@
 package org.maxur.sofarc.serv
 
+import org.maxur.sofarc.core.service.ConfigSource
 import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.hk2.DSL.configClass
-import org.maxur.sofarc.core.service.hk2.DSL.configSource
-import org.maxur.sofarc.core.service.hk2.DSL.property
+import org.maxur.sofarc.core.service.hk2.DSL.cfg
 import org.maxur.sofarc.core.service.hk2.DSL.service
 import org.maxur.sofarc.core.service.hk2.DSL.webService
 import org.maxur.sofarc.params.ConfigParams
@@ -23,23 +22,14 @@ object Launcher {
     /**
      * Command line entry point. This method kicks off the building of a application  object
      * and executes it.
-            service {
-                    name : ${name}
-                    config {
-                        format: Hocon
-                    }
-                    webServer:    Grizzly
-                }.start
+     *
      * @param args - arguments of command.
      */
     @JvmStatic fun main(args: Array<String>)  {
         service()
-                .name(property("name"))
-                //.config(fromClasspass().type("Hocon").root("SYS").to(ConfigParams::class.java))
-                //.config(fromFile("file.yaml").to(ConfigParams::class.java))
-                .configFrom(configSource("Hocon"))
-                .configTo(configClass(ConfigParams::class.java))
-                .embedded(webService("Grizzly"))
+                .name(cfg("name"))
+                .config(ConfigSource.fromClasspath().rootKey("DEFAULTS").writeTo(ConfigParams::class.java))
+                .embed(webService("Grizzly"))
                 .beforeStart( { ms ->  beforeStart(ms) })
                 .afterStop( { ms ->  afterStop(ms) })
                 .onError( { ms, e ->  onError(ms, e) })
