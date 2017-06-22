@@ -13,6 +13,7 @@ import org.maxur.sofarc.core.rest.RestResourceConfig
 import org.maxur.sofarc.core.service.WebServer
 import org.maxur.sofarc.core.service.grizzly.config.StaticContent
 import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
+import org.maxur.sofarc.core.service.hk2.DSL.cfg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -39,11 +40,11 @@ open class WebServerGrizzlyImpl
         val config: RestResourceConfig,
         val locator: ServiceLocator
 ) : WebServer(webConfig.url) {
-    
+
     companion object {
+
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
-
     private lateinit var httpServer: HttpServer
 
     override val name: String
@@ -136,10 +137,15 @@ open class WebServerGrizzlyImpl
         )
     }
 
-
     private fun makeLoggerBridge() {
         SLF4JBridgeHandler.removeHandlersForRootLogger()
         SLF4JBridgeHandler.install()
+    }
+
+
+    override fun clone(key: String?): WebServerGrizzlyImpl {
+        if (key == null) return this
+        return WebServerGrizzlyImpl(cfg(key).asClass(WebAppConfig::class.java).get(), config, locator)
     }
 
     /**

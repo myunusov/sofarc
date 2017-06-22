@@ -51,6 +51,9 @@ abstract class WebServer(val baseUri: URI): EmbeddedService {
      */
     protected abstract fun shutdown()
 
+    
+    abstract fun clone(key: String?): WebServer
+
 
 }
 
