@@ -11,6 +11,9 @@ import org.glassfish.jersey.server.ServerProperties
 import org.jvnet.hk2.annotations.Contract
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
+import org.secnod.shiro.jersey.AuthInjectionBinder
+import org.secnod.shiro.jersey.AuthorizationFilterFeature
+import org.secnod.shiro.jersey.SubjectFactory
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.ws.rs.core.Feature
@@ -52,12 +55,15 @@ abstract class RestResourceConfig(val name: String,  vararg val restPackages: St
         register(JacksonFeature::class.java)
 
         register(RuntimeExceptionHandler::class.java)
+        register(AuthorizationExceptionHandler::class.java)
 
         register(ServiceLocatorFeature())
         register(ServiceEventListener("/"))
         register(MultiPartFeature::class.java)
 
-
+        register(AuthorizationFilterFeature())
+        register(SubjectFactory())
+        register(AuthInjectionBinder())
         
         val provider = JacksonJaxbJsonProvider()
         provider.setMapper(mapper)

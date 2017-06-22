@@ -4,6 +4,7 @@ import dk.nykredit.jackson.dataformat.hal.HALLink
 import dk.nykredit.jackson.dataformat.hal.annotation.Link
 import dk.nykredit.jackson.dataformat.hal.annotation.Resource
 import io.swagger.annotations.*
+import org.apache.shiro.authz.annotation.RequiresPermissions
 import org.maxur.sofarc.core.service.MicroService
 import java.net.URI
 import javax.inject.Inject
@@ -20,6 +21,7 @@ import javax.ws.rs.core.MediaType
  */
 @Path("/service")
 @Api(value = "/service", description = "Endpoint for Service specific operations")
+@RequiresPermissions("protected:read")
 class ServiceResource @Inject constructor(val service: MicroService) {
 
     @GET
@@ -48,6 +50,7 @@ class ServiceResource @Inject constructor(val service: MicroService) {
             ApiResponse(code = 500, message = "Internal server error")
         )
     )
+    @RequiresPermissions("protected:write")
     fun state(
             @ApiParam(name = "state", value = "New service state", required = true, allowableValues="stop, restart")
             @PathParam("state") state: String

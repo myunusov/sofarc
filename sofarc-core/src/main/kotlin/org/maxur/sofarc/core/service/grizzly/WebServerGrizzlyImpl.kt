@@ -2,8 +2,10 @@
 
 package org.maxur.sofarc.core.service.grizzly
 
+import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
+import org.glassfish.grizzly.servlet.WebappContext
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
@@ -17,6 +19,7 @@ import org.maxur.sofarc.core.service.hk2.DSL.cfg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.util.*
 import javax.inject.Inject
 import javax.ws.rs.core.Feature
 import javax.ws.rs.core.FeatureContext
@@ -45,6 +48,7 @@ open class WebServerGrizzlyImpl
 
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
+
     private lateinit var httpServer: HttpServer
 
     override val name: String
@@ -88,11 +92,51 @@ open class WebServerGrizzlyImpl
     }
 
     private fun httpServer(): HttpServer {
+        val context = WebappContext("grizzly web context", "")
+
+        /*
+        <context-param>
+        <param-name>shiroConfigLocations</param-name>
+        <param-value>classpath:shiro.ini</param-value>
+        </context-param>
+        */
+        context.addContextInitParameter("shiroConfigLocations", "classpath:shiro.ini")
+
+/*
+        <listener>
+        <listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
+        </listener>
+*/
+        context.addListener(org.apache.shiro.web.env.EnvironmentLoaderListener::class.java)
+
+/*
+        <filter>
+        <filter-name>ShiroFilter</filter-name>
+        <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+        </filter>
+*/
+        val f1 = context.addFilter("f1", BasicHttpAuthenticationFilter::class.java)
+        val shiroFilter = context.addFilter("ShiroFilter", org.apache.shiro.web.servlet.ShiroFilter::class.java)
+
+/*        <filter-mapping>
+            <filter-name>ShiroFilter</filter-name>
+            <url-pattern>*//*</url-pattern>
+            <dispatcher>REQUEST</dispatcher>
+            <dispatcher>FORWARD</dispatcher>
+            <dispatcher>INCLUDE</dispatcher>
+            <dispatcher>ERROR</dispatcher>
+            </filter-mapping>
+*/
+        shiroFilter.addMappingForUrlPatterns(EnumSet.allOf(javax.servlet.DispatcherType::class.java), "/api/**")
+        f1.addMappingForUrlPatterns(EnumSet.allOf(javax.servlet.DispatcherType::class.java), "/**")
+
+
         val server = GrizzlyHttpServerFactory.createHttpServer(webConfig.apiUri, config, locator)
-        val result = server
-        result.serverConfiguration.isPassTraceRequest = true
-        result.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8
-        return result
+
+        context.deploy(server)
+        server.serverConfiguration.isPassTraceRequest = true
+        server.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8
+        return server
     }
 
     private fun makeStaticHandlers(serverConfiguration: ServerConfiguration) {

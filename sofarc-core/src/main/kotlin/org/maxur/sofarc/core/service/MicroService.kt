@@ -2,8 +2,12 @@
 
 package org.maxur.sofarc.core.service
 
+import org.apache.shiro.SecurityUtils
+import org.apache.shiro.config.IniSecurityManagerFactory
 import org.jvnet.hk2.annotations.Service
 import java.util.concurrent.Executors
+
+
 
 
 /**
@@ -48,6 +52,9 @@ class MicroService {
      * Start Service
      */
     fun start() {
+        val factory = IniSecurityManagerFactory("classpath:shiro.ini")
+        val securityManager = factory.instance
+        SecurityUtils.setSecurityManager(securityManager)
         try {
             beforeStart.invoke(this)
             services.forEach { it.start() }
