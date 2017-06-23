@@ -1,10 +1,7 @@
 package org.maxur.sofarc.serv
 
-import org.maxur.sofarc.core.service.ConfigSource
 import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.hk2.DSL.cfg
-import org.maxur.sofarc.core.service.hk2.DSL.service
-import org.maxur.sofarc.core.service.hk2.DSL.webService
+import org.maxur.sofarc.core.service.MicroService.Companion.service
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 
@@ -27,21 +24,20 @@ object Launcher {
      */
     @JvmStatic fun main(args: Array<String>)  {
         service()
-                .name(cfg("name"))
-                .config(ConfigSource.fromClasspath().rootKey("DEFAULTS").writeTo(ConfigParams::class.java))
-                .embed(webService("Grizzly"))
-                .beforeStart( { ms ->  beforeStart(ms) })
-                .afterStop( { ms ->  afterStop(ms) })
-                .onError( { ms, e ->  onError(ms, e) })
+                .name(":name")
+                .config().fromClasspath().rootKey("DEFAULTS")
+                .embed("Grizzly").asWebService() // .confuguredBy(":webapp")
+                .beforeStart(this::beforeStart)
+                .afterStop(this::afterStop)
+                .onError(this::onError)
                 .start()
     }
     
     fun beforeStart(service: MicroService) {
-        (service.config as ConfigParams).log()
+        (service.bean(ConfigParams::class.java))!!.log()
         log().info("${service.name} is started")
     }
-
-
+    
     fun afterStop(service: MicroService) {
         log().info("${service.name} is stopped")
     }

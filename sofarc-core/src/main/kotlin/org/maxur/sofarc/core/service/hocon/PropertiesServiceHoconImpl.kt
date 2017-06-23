@@ -35,22 +35,29 @@ class PropertiesServiceHoconImpl @Inject constructor(val source: ConfigSource) :
         val log: Logger = LoggerFactory.getLogger(PropertiesServiceHoconImpl::class.java)
     }
 
-    private val objectMapper = ObjectMapper(HoconFactory())
+    private lateinit var strategy: PropertiesService
 
-    private var defaultConfig: Config? = null
-
-    /**
-     * init post construct
-     */
     @PostConstruct
     fun init() {
         try {
-            defaultConfig = ConfigFactory.load().getConfig(source.rootKey)
+            strategy = SuccessStrategy(ConfigFactory.load().getConfig(source.rootKey))
         } catch(e: ConfigException.Missing) {
-            log.error("The '${source.rootKey}' config not found. " +
+            strategy = FailStrategy()
+            log.warn("The '${source.rootKey}' config not found. " +
                     "Add application.conf with '${source.rootKey}' section to classpath")
         }
     }
+
+    override fun asString(key: String): String? = strategy.asString(key)
+    override fun asLong(key: String): Long?  = strategy.asLong(key)
+    override fun asInteger(key: String): Int? = strategy.asInteger(key)
+    override fun asURI(key: String): URI?  = strategy.asURI(key)
+    override fun read(key: String, clazz: Class<*>): Any?  = strategy.read(key, clazz)
+}
+
+class SuccessStrategy(val config: Config) : PropertiesService {
+
+    private val objectMapper = ObjectMapper(HoconFactory())
 
     override fun read(key: String, clazz: Class<*>): Any? {
         when (clazz.typeName) {
@@ -79,37 +86,55 @@ class PropertiesServiceHoconImpl @Inject constructor(val source: ConfigSource) :
                 return null
             }
         } catch (e: IOException) {
-            log.error("Configuration parameter '$key' is not parsed.")
-            log.error(e.message, e)
+            PropertiesServiceHoconImpl.log.error("Configuration parameter '$key' is not parsed.")
+            PropertiesServiceHoconImpl.log.error(e.message, e)
             return null
         }
     }
 
     override fun asString(key: String): String? {
-        return getValue(key, Function { it?.getString(key)})
+        return getValue(key, Function { it?.getString(key) })
     }
 
     override fun asLong(key: String): Long? {
-        return getValue(key, Function { it?.getLong(key)})
+        return getValue(key, Function { it?.getLong(key) })
     }
 
     override fun asInteger(key: String): Int? {
-        return getValue(key, Function { it?.getInt(key)})
+        return getValue(key, Function { it?.getInt(key) })
     }
-    
+
     private fun <T> getValue(key: String, transform: Function<Config?, T?>): T? {
         try {
             val value = findValue(transform)
-            log.debug("Configuration parameter '$key' = '$value'")
+            PropertiesServiceHoconImpl.log.debug("Configuration parameter '$key' = '$value'")
             return value
         } catch (e: ConfigException.Missing) {
-            log.error("Configuration parameter '$key' is not found.")
+            PropertiesServiceHoconImpl.log.error("Configuration parameter '$key' is not found.")
             throw e
         }
     }
 
     private fun <T> findValue(transform: Function<Config?, T?>): T? {
-        return transform.apply(defaultConfig)
+        return transform.apply(config)
     }
 
 }
+
+class FailStrategy : PropertiesService {
+
+    override fun asString(key: String): String? = error(key)
+
+    override fun asLong(key: String): Long? = error(key)
+
+    override fun asInteger(key: String): Int? = error(key)
+
+    override fun asURI(key: String): URI? = error(key)
+
+    override fun read(key: String, clazz: Class<*>): Any? = error(key)
+
+    private fun <T> error(key: String): T =
+            throw IllegalStateException("Service Configuration is not found. Key '$key' unresolved")
+
+}
+

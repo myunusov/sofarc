@@ -2,7 +2,9 @@
 
 package org.maxur.sofarc.core.service
 
+import org.glassfish.hk2.utilities.Binder
 import org.jvnet.hk2.annotations.Service
+import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
 
 
@@ -14,15 +16,19 @@ import java.util.concurrent.Executors
 @Service
 class MicroService {
 
+    companion object {
+        fun service(vararg binders: Binder): MicroServiceBuilder = MicroServiceBuilder(*binders)
+    }
+
+    /**
+     * The Service Locator
+     */
+    lateinit var locator: Locator
+
     /**
      * The Service Name
      */
     lateinit var name: String
-
-    /**
-     * The Service Config
-     */
-    lateinit var config: Any
 
     /**
      * List of embedded services
@@ -44,6 +50,8 @@ class MicroService {
      */
     lateinit var onError: (MicroService, Exception) -> Unit
 
+    fun <T> bean(clazz: Class<T>): T? = locator.service(clazz)
+    
     /**
      * Start Service
      */
@@ -133,5 +141,6 @@ class MicroService {
         }
 
     }
+
 
 }

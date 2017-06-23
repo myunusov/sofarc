@@ -56,8 +56,6 @@ abstract class RestResourceConfig(val name: String,  vararg val restPackages: St
         register(ServiceLocatorFeature())
         register(ServiceEventListener("/"))
         register(MultiPartFeature::class.java)
-
-
         
         val provider = JacksonJaxbJsonProvider()
         provider.setMapper(mapper)
