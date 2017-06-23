@@ -1,5 +1,6 @@
 package org.maxur.sofarc.core.rest
 
+import org.apache.shiro.authz.AuthorizationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import sun.security.timestamp.TSResponse.BAD_REQUEST
@@ -30,6 +31,7 @@ class RuntimeExceptionHandler : ExceptionMapper<RuntimeException> {
         when (exception) {
             is IllegalArgumentException -> return onIllegalArgument(exception)
             is WebApplicationException  -> return onWebApplicationException(exception)
+            is AuthorizationException -> return onAuthorizationException(exception)
             else -> {
                 log.error(exception.message, exception)
                 return status(Status.INTERNAL_SERVER_ERROR)
@@ -38,6 +40,15 @@ class RuntimeExceptionHandler : ExceptionMapper<RuntimeException> {
                         .build()
             }
         }
+    }
+
+    private fun onAuthorizationException(exception: AuthorizationException): Response {
+        log.warn(exception.message)
+        log.debug(exception.message, exception)
+        return status(Status.FORBIDDEN)
+                .type(APPLICATION_JSON)
+                .entity(makeSystemErrorEntity(exception))
+                .build()
     }
 
     private fun onWebApplicationException(exception: WebApplicationException): Response {

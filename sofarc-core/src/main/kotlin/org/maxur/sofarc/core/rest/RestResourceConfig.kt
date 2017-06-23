@@ -55,7 +55,6 @@ abstract class RestResourceConfig(val name: String,  vararg val restPackages: St
         register(JacksonFeature::class.java)
 
         register(RuntimeExceptionHandler::class.java)
-        register(AuthorizationExceptionHandler::class.java)
 
         register(ServiceLocatorFeature())
         register(ServiceEventListener("/"))
