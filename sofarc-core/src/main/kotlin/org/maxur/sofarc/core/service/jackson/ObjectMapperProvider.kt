@@ -16,7 +16,8 @@ class ObjectMapperProvider : Factory<ObjectMapper> {
     private val objectMapper: ObjectMapper = ObjectMapper()
 
     init {
-        objectMapper.setVisibility(PropertyAccessor.SETTER, JsonAutoDetect.Visibility.NONE)
+        objectMapper
+                .setVisibility(PropertyAccessor.SETTER, JsonAutoDetect.Visibility.NONE)
                 .setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE)
                 .setVisibility(PropertyAccessor.IS_GETTER, JsonAutoDetect.Visibility.NONE)
                 .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
@@ -27,13 +28,7 @@ class ObjectMapperProvider : Factory<ObjectMapper> {
                 .registerModule(JacksonHALModule())
     }
 
-    override fun dispose(instance: ObjectMapper?) {
-        // IGNORE
-    }
-
-    override fun provide(): ObjectMapper {
-        return objectMapper;
-    }
-
+    override fun dispose(instance: ObjectMapper?) = Unit
+    override fun provide(): ObjectMapper = objectMapper
 
 }

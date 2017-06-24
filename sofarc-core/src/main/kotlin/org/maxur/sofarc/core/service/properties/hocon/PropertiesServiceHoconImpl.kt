@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.hocon
+package org.maxur.sofarc.core.service.properties.hocon
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory
@@ -11,6 +11,7 @@ import com.typesafe.config.ConfigObject
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.service.ConfigSource
 import org.maxur.sofarc.core.service.PropertiesService
+import org.maxur.sofarc.core.service.properties.NullPropertiesService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -42,7 +43,7 @@ class PropertiesServiceHoconImpl @Inject constructor(val source: ConfigSource) :
         try {
             strategy = SuccessStrategy(ConfigFactory.load().getConfig(source.rootKey))
         } catch(e: ConfigException.Missing) {
-            strategy = FailStrategy()
+            strategy = NullPropertiesService()
             log.warn("The '${source.rootKey}' config not found. " +
                     "Add application.conf with '${source.rootKey}' section to classpath")
         }
@@ -118,23 +119,6 @@ class SuccessStrategy(val config: Config) : PropertiesService {
     private fun <T> findValue(transform: Function<Config?, T?>): T? {
         return transform.apply(config)
     }
-
-}
-
-class FailStrategy : PropertiesService {
-
-    override fun asString(key: String): String? = error(key)
-
-    override fun asLong(key: String): Long? = error(key)
-
-    override fun asInteger(key: String): Int? = error(key)
-
-    override fun asURI(key: String): URI? = error(key)
-
-    override fun read(key: String, clazz: Class<*>): Any? = error(key)
-
-    private fun <T> error(key: String): T =
-            throw IllegalStateException("Service Configuration is not found. Key '$key' unresolved")
 
 }
 

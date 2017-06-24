@@ -5,6 +5,7 @@ import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.ServiceHandle
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.PropertiesService
+import org.maxur.sofarc.core.service.properties.PropertiesServiceHolder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Constructor
@@ -20,12 +21,12 @@ import javax.inject.Inject
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-class ConfigurationInjectionResolver @Inject constructor(holder: PropertiesServiceHolder) : InjectionResolver<Value> {
+class PropertiesInjectionResolver @Inject constructor(holder: PropertiesServiceHolder) : InjectionResolver<Value> {
 
     val propertiesService: PropertiesService = holder.propertiesService
 
     companion object {
-        val log: Logger = LoggerFactory.getLogger(ConfigurationInjectionResolver::class.java)
+        val log: Logger = LoggerFactory.getLogger(PropertiesInjectionResolver::class.java)
     }
 
     override fun resolve(injectee: Injectee, root: ServiceHandle<*>?): Any {

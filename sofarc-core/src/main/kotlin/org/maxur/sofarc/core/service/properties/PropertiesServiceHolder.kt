@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.hk2
+package org.maxur.sofarc.core.service.properties
 
 import org.glassfish.hk2.api.IterableProvider
 import org.glassfish.hk2.api.ServiceLocator

@@ -12,6 +12,7 @@ import org.maxur.sofarc.core.service.ConfigSource
 import org.maxur.sofarc.core.service.Locator
 import org.maxur.sofarc.core.service.WebServer
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
+import org.maxur.sofarc.core.service.properties.PropertiesServiceHolder
 import javax.inject.Singleton
 
 class LocatorHK2Impl : Locator() {
@@ -37,23 +38,19 @@ class LocatorHK2Impl : Locator() {
     }
 
     private class ConfigSourceBinder(val configSource: ConfigSource) : AbstractBinder() {
-
-        @Override
         override fun configure() {
             bind(configSource).to(ConfigSource::class.java)
-
-            bind<ConfigurationInjectionResolver>(ConfigurationInjectionResolver::class.java)
-                    .to(object : TypeLiteral<InjectionResolver<Value>>() {
-
-                    })
+            bind(PropertiesInjectionResolver::class.java)
+                    .to(object : TypeLiteral<InjectionResolver<Value>>() {})
                     .`in`(Singleton::class.java)
         }
     }
 
     private class ObjectMapperBinder : AbstractBinder() {
-        @Override
         override fun configure() {
-            bindFactory(ObjectMapperProvider::class.java).to(ObjectMapper::class.java).`in`(Singleton::class.java)
+            bindFactory(ObjectMapperProvider::class.java)
+                    .to(ObjectMapper::class.java)
+                    .`in`(Singleton::class.java)
         }
     }
 
