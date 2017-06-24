@@ -20,7 +20,7 @@ class PropertiesServiceHolder @Inject constructor(
     lateinit var propertiesService: PropertiesService
 
     companion object {
-        val log: Logger = LoggerFactory.getLogger(ConfigurationInjectionResolver::class.java)
+        val log: Logger = LoggerFactory.getLogger(PropertiesServiceHolder::class.java)
     }
 
     @PostConstruct
@@ -36,7 +36,7 @@ class PropertiesServiceHolder @Inject constructor(
             )
         }
         propertiesService = service
-        log.info("Configuration Properties Service is '$formatName'")
+        log.info("Configuration Properties Service is '$formatName'\n")
     }
 
 }

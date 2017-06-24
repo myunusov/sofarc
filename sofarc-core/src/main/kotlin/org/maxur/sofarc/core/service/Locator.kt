@@ -4,9 +4,7 @@ import org.glassfish.hk2.utilities.Binder
 
 abstract class Locator {
     
-    abstract fun bind(vararg binders: Binder)
-
-    abstract fun bind(configSource: ConfigSource)
+    abstract fun bind(configSource: ConfigSource, vararg binders: Binder)
 
     abstract fun <T> service(clazz: Class<T>): T?
 

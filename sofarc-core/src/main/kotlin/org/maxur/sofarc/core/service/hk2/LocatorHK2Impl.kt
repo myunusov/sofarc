@@ -32,12 +32,8 @@ class LocatorHK2Impl : Locator() {
     override fun names(clazz: Class<*>): List<String> =
             locator.getAllServiceHandles(WebServer::class.java).map({ it.activeDescriptor.name })
 
-    override fun bind(binders: Array<out Binder>) {
-        ServiceLocatorUtilities.bind(locator, ObjectMapperBinder(), *binders)
-    }
-
-    override fun bind(configSource: ConfigSource) {
-        ServiceLocatorUtilities.bind(locator,  ConfigSourceBinder(configSource))
+    override fun bind(configSource: ConfigSource, vararg binders: Binder) {
+        ServiceLocatorUtilities.bind(locator, ObjectMapperBinder(), ConfigSourceBinder(configSource), *binders)
     }
 
     private class ConfigSourceBinder(val configSource: ConfigSource) : AbstractBinder() {

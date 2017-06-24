@@ -90,8 +90,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
     fun build(): MicroService {
         val locator: Locator = LocatorHK2Impl()
-        locator.bind(configSourceBuilder.build())
-        locator.bind(*binders)
+        locator.bind(configSourceBuilder.build(), *binders)
 
         val service = locator.service(MicroService::class.java) ?:
                 throw IllegalStateException("MicroService is not configured")
