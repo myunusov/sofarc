@@ -9,7 +9,6 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.service.properties.NullPropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
 import org.maxur.sofarc.core.service.properties.PropertiesSource
@@ -33,7 +32,7 @@ class PropertiesServiceFactoryHoconImpl: PropertiesServiceFactory() {
 
     override fun make(source: PropertiesSource): PropertiesService? {
         try {
-            return SuccessStrategy(ConfigFactory.load().getConfig(source.rootKey))
+            return PropertiesServiceHoconImpl(ConfigFactory.load().getConfig(source.rootKey))
         } catch(e: ConfigException.Missing) {
             log.warn(
                     "The '${source.rootKey}' config not found. " +
@@ -43,17 +42,18 @@ class PropertiesServiceFactoryHoconImpl: PropertiesServiceFactory() {
         }
     }
 
-    class SuccessStrategy(val config: Config) : PropertiesService {
+    class PropertiesServiceHoconImpl(val config: Config) : PropertiesService {
 
         private val objectMapper = ObjectMapper(HoconFactory())
 
-        override fun read(key: String, clazz: Class<*>): Any? {
-            when (clazz.typeName) {
-                "java.lang.String" -> return asString(key)
-                "java.lang.Integer" -> return asInteger(key)
-                "java.lang.Long" -> return asLong(key)
-                "java.net.URI" -> return asURI(key)
-                else -> return asObject(key, clazz)
+        @Suppress("UNCHECKED_CAST")
+        override fun <P> read(key: String, clazz: Class<P>): P? {
+            when (clazz) {
+                String::class.java -> return asString(key) as P
+                Integer::class.java -> return asInteger(key) as P
+                Long::class.java -> return asLong(key) as P
+                java.net.URI::class.java -> return asURI(key) as P
+                else -> return asObject(key, clazz) as P
             }
         }
 

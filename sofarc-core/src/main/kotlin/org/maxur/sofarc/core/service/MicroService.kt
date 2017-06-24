@@ -7,15 +7,20 @@ import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.service.eservice.EmbeddedService
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
+import javax.inject.Inject
 
 
 /**
+ * The microservice
+ *
+ * @param service Embedded service (may be composite)
+ *
  * @author myunusov
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
 @Service
-class MicroService {
+class MicroService @Inject constructor(val service: EmbeddedService<Any>) {
 
     companion object {
         fun service(vararg binders: Binder): MicroServiceBuilder = MicroServiceBuilder(*binders)
@@ -30,11 +35,6 @@ class MicroService {
      * The Service Name
      */
     lateinit var name: String
-
-    /**
-     * List of embedded services
-     */
-    lateinit var services: List<EmbeddedService>
 
     /**
      * on start event
@@ -59,7 +59,7 @@ class MicroService {
     fun start() {
         try {
             beforeStart.invoke(this)
-            services.forEach { it.start() }
+            service.start()
         } catch(e: Exception) {
             error(e)
         }
@@ -68,12 +68,21 @@ class MicroService {
     /**
      * Stop Service
      */
-    fun stop() {
+    fun deferredStop() {
         try {
             postpone({
-                services.forEach { it.stop() }
+                service.stop()
                 afterStop.invoke(this)
             })
+        } catch(e: Exception) {
+            error(e)
+        }
+    }
+
+    fun stop() {
+        try {
+            service.stop()
+            afterStop.invoke(this)
         } catch(e: Exception) {
             error(e)
         }
@@ -82,13 +91,13 @@ class MicroService {
     /**
      * Restart Service
      */
-    fun restart() {
+    fun deferredRestart() {
         try {
             postpone({
-                services.forEach { it.stop() }
+                service.start()
                 afterStop.invoke(this)
                 beforeStart.invoke(this)
-                services.forEach { it.start() }
+                service.stop()
             })
         } catch(e: Exception) {
             error(e)
@@ -142,6 +151,8 @@ class MicroService {
         }
 
     }
+
+
 
 
 }

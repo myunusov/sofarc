@@ -60,5 +60,5 @@ interface PropertiesService {
      * *
      * @return properties by key
      */
-    fun read(key: String, clazz: Class<*>): Any?
+    fun <P> read(key: String, clazz: Class<P>): P?
 }

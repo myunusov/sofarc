@@ -12,6 +12,8 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.maxur.sofarc.core.service.eservice.EmbeddedService
+import org.maxur.sofarc.core.service.eservice.EmbeddedServiceFactory
+import org.maxur.sofarc.core.service.eservice.ServiceConfig
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
@@ -22,7 +24,7 @@ class MicroServiceSpec : Spek({
     describe("a micro-service dsl Builder") {
         val sut = MicroService
 
-        on ("Build microservice without properties source") {
+        on("Build microservice without properties source") {
 
             it("should return new micro-service without embedded services") {
                 val service = sut.service()
@@ -51,12 +53,12 @@ class MicroServiceSpec : Spek({
 
         }
 
-        on ("Build microservice with properties source") {
-            val binder = Binder()
+        on("Build microservice with properties source") {
 
-            it("return new micro-service with name from properties") {
+
+            it("should return new micro-service with name from properties") {
                 val builder =
-                        sut.service(binder)
+                        sut.service(Binder())
                                 .config().format("config")
                                 .name(":name") as MicroServiceBuilder
                 val service = builder.build()
@@ -64,23 +66,57 @@ class MicroServiceSpec : Spek({
                 service.name.should.be.equal("name")
             }
 
-            it("return and start new micro-service with embedded service") {
+            it("should return new micro-service with embedded service") {
                 val builder =
-                        sut.service(binder)
-                                .embed("service")
+                        sut.service(Binder())
+                                .embed("service1")
                                 .name("TEST2") as MicroServiceBuilder
 
                 val service = builder.build()
                 service.should.be.not.`null`
+            }
+
+            it("should return new micro-service with few embedded services") {
+                val builder =
+                        sut.service(Binder())
+                                .embed("service1")
+                                .embed("service2")
+                                .name("TEST2") as MicroServiceBuilder
+
+                val service = builder.build()
+                service.should.be.not.`null`
+
+                service.service
+
                 service.start()
-                verify(binder.embeddedService, times(1)).start()
-                verify(binder.embeddedService, times(0)).stop()
+                service.stop()
+            }
+
+            it("should start new micro-service with few embedded services") {
+                val service1 = mock<EmbeddedService<Any>> {}
+                val service2 = mock<EmbeddedService<Any>> {}
+                val builder =
+                        sut.service(Binder())
+                                .embed(service1)
+                                .embed(service2)
+                                .name("TEST2")
+
+                val service = builder.build()
+                service.should.be.not.`null`
+
+                service.service
+
+                service.start()
+                verify(service1, times(1)).start()
+                verify(service2, times(1)).start()
+
             }
 
         }
 
     }
 })
+
 
 class Binder : AbstractBinder() {
 
@@ -90,12 +126,17 @@ class Binder : AbstractBinder() {
         }
     }
 
-    val embeddedService = mock<EmbeddedService> {
+    class TestServiceFactory : EmbeddedServiceFactory<Any>() {
+        val embeddedService = mock<EmbeddedService<Any>> {}
+        override fun make(cfg: ServiceConfig.LookupDescriptor): EmbeddedService<Any>? {
+            return embeddedService
+        }
     }
 
     override fun configure() {
         bind(TestPropertiesServiceFactory::class.java).named("config").to(PropertiesServiceFactory::class.java)
-        bind(embeddedService).named("service").to(EmbeddedService::class.java)
+        bind(TestServiceFactory::class.java).named("service1").to(EmbeddedServiceFactory::class.java)
+        bind(TestServiceFactory::class.java).named("service2").to(EmbeddedServiceFactory::class.java)
     }
 
 }

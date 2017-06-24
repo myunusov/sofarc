@@ -3,11 +3,14 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
-import org.maxur.sofarc.core.service.eservice.EmbeddedService
 import org.maxur.sofarc.core.service.Locator
 import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.eservice.WebServer
+import org.maxur.sofarc.core.service.eservice.AllServiceConfig
+import org.maxur.sofarc.core.service.eservice.EmbeddedService
+import org.maxur.sofarc.core.service.eservice.EmbeddedServiceFactory
+import org.maxur.sofarc.core.service.eservice.ServiceConfig
 import org.maxur.sofarc.core.service.properties.PropertiesSource
+import java.util.*
 
 interface Builder {
 
@@ -19,11 +22,11 @@ interface Builder {
 
     fun name(value: String): Builder
 
-    fun embed(vararg value: EmbeddedService): Builder
+    fun embed(vararg value: EmbeddedService<Any>): Builder
 
     fun embed(value: String): MicroServiceBuilder.ServiceBuilder
 
-    fun config(): MicroServiceBuilder.ConfigSourceBuilder
+    fun config(): MicroServiceBuilder.PropertiesSourceBuilder
 
     /**
      * Start Service
@@ -36,11 +39,11 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
     @Suppress("CanBePrimaryConstructorProperty")
     private val binders: Array<out Binder> = binders
 
-    private val configSourceBuilder: ConfigSourceBuilder = ConfigSourceBuilder(this)
+    private val propertiesSourceBuilder: PropertiesSourceBuilder = PropertiesSourceBuilder(this)
 
     private var nameBuilder: PropertyBuilder = PropertyBuilder("Anonymous")
 
-    private var serviceBuilders: MutableList<ServiceBuilder> = mutableListOf()
+    private var serviceBuilder: ServiceBuilder = ServiceBuilder(this)
 
     private var beforeStart: (MicroService) -> Unit = {}
 
@@ -68,21 +71,20 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         return this
     }
 
-    override fun embed(vararg value: EmbeddedService): MicroServiceBuilder {
+    override fun embed(vararg value: EmbeddedService<Any>): MicroServiceBuilder {
         value.forEach {
-            serviceBuilders.add(ServiceBuilder(this, it))
+            serviceBuilder.add(it)
         }
         return this
     }
 
     override fun embed(value: String): ServiceBuilder {
-        val builder = ServiceBuilder(this, value)
-        serviceBuilders.add(builder)
-        return builder
+        serviceBuilder.add(value)
+        return serviceBuilder
     }
 
-    override fun config(): ConfigSourceBuilder {
-        return configSourceBuilder
+    override fun config(): PropertiesSourceBuilder {
+        return propertiesSourceBuilder
     }
 
     /**
@@ -93,93 +95,101 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
     }
 
     fun build(): MicroService {
-        val locator: Locator = LocatorHK2Impl()
-        locator.bind(configSourceBuilder.build(), *binders)
+        val locator = LocatorFactoryHK2Impl()
+                .bind(serviceBuilder.build())
+                .bind(propertiesSourceBuilder.build())
+                .bind(*binders)
+                .make()
 
         val service = locator.service(MicroService::class.java) ?:
                 throw IllegalStateException("MicroService is not configured")
 
         service.locator = locator
         service.name = nameBuilder.build(locator)
-        service.services = serviceBuilders.map { it.build(locator) }
         service.beforeStart = beforeStart
         service.afterStop = afterStop
         service.onError = onError
         return service
     }
 
-    class ConfigSourceBuilder(val parent: MicroServiceBuilder): Builder by parent {
+    class PropertiesSourceBuilder(val parent: MicroServiceBuilder): Builder by parent {
 
         var format: String = "Hocon"
 
         var rootKey: String = "DEFAULTS"
 
-        fun fromClasspath(): ConfigSourceBuilder = this
+        fun fromClasspath(): PropertiesSourceBuilder = this
 
-        fun format(value: String): ConfigSourceBuilder {
+        fun format(value: String): PropertiesSourceBuilder {
             format = value
             return this
         }
 
-        fun rootKey(value: String): ConfigSourceBuilder {
+        fun rootKey(value: String): PropertiesSourceBuilder {
             rootKey = value
+            return this
+        }
+
+        override fun config(): PropertiesSourceBuilder {
             return this
         }
 
         fun build(): PropertiesSource {
             return PropertiesSource(format, rootKey)
         }
+    }
 
-        override fun config(): ConfigSourceBuilder {
-            return this
+    class ServiceBuilder(val parent: MicroServiceBuilder): Builder by parent {
+
+        val configs = ArrayList<ServiceConfig>()
+
+        var isPresent: Boolean = false
+
+        lateinit var type: String
+
+        // TODO
+        var clazz: Class<out EmbeddedServiceFactory<Any>> =
+                EmbeddedServiceFactory::class.java as Class<out EmbeddedServiceFactory<Any>>
+        // TODO
+        var propertyKey : String? = "webapp"
+
+        fun build(): AllServiceConfig {
+            if (isPresent) {
+                configs.add(ServiceConfig(type, propertyKey, clazz))
+            }
+            return AllServiceConfig(Collections.unmodifiableCollection(configs))
         }
+
+        constructor(parent: MicroServiceBuilder, propertyKey: String) : this(parent) {
+            this.propertyKey = propertyKey
+        }
+
+
+        fun add(service: EmbeddedService<Any>) {
+            if (isPresent) {
+                configs.add(ServiceConfig(type, propertyKey, clazz))
+            }
+            configs.add(ServiceConfig(service))
+            isPresent = false
+        }
+
+        fun add(value: String) {
+            if (isPresent) {
+                configs.add(ServiceConfig(type, propertyKey, clazz))
+            }
+            isPresent = true
+            type = value
+        }
+
     }
 
     class PropertyBuilder(val value: String) {
+
         fun build(locator: Locator): String =
                 when {
                     value.startsWith(":") -> locator.property(value.substringAfter(":"))
                     else -> value
                 }
-    }
-
-    class ServiceBuilder(
-            val parent: MicroServiceBuilder,
-            val func: (String, Class<out EmbeddedService>, Locator) -> EmbeddedService
-    ): Builder by parent {
-
-        lateinit var name: String
-        var clazz: Class<out EmbeddedService> = EmbeddedService::class.java
-
-        companion object {
-              fun make(name: String, clazz: Class<out EmbeddedService>, locator: Locator): EmbeddedService {
-                val result = locator.service(clazz, name)
-                if (result == null) {
-                    val list = locator.names(clazz)
-                    throw IllegalStateException("Service '$name' is not supported. Try one from this list: $list")
-                }
-                return result
-            }
-        }
-
-        fun configuredBy(key: String): Any {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-
-        fun asWebService(): MicroServiceBuilder {
-            clazz = WebServer::class.java
-            return parent
-        }
-        
-        fun build(locator: Locator): EmbeddedService = func.invoke(name, clazz, locator)
-
-        constructor(parent: MicroServiceBuilder, service: EmbeddedService) : this(parent, { _, _, _ -> service} )
-
-        constructor(parent: MicroServiceBuilder, value: String) : this(parent, { n, c, l -> make(n, c, l) } ) {
-            name = value
-        }
-
     }
 
 }
