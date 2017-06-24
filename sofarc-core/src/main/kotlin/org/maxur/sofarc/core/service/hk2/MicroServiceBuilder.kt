@@ -3,7 +3,11 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
-import org.maxur.sofarc.core.service.*
+import org.maxur.sofarc.core.service.EmbeddedService
+import org.maxur.sofarc.core.service.Locator
+import org.maxur.sofarc.core.service.MicroService
+import org.maxur.sofarc.core.service.WebServer
+import org.maxur.sofarc.core.service.properties.PropertiesSource
 
 interface Builder {
 
@@ -34,7 +38,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
     private val configSourceBuilder: ConfigSourceBuilder = ConfigSourceBuilder(this)
 
-    private var nameBuilder: ValueBuilder = ValueBuilder("Anonymous")
+    private var nameBuilder: PropertyBuilder = PropertyBuilder("Anonymous")
 
     private var serviceBuilders: MutableList<ServiceBuilder> = mutableListOf()
 
@@ -60,7 +64,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
     }
 
     override fun name(value: String): MicroServiceBuilder {
-        nameBuilder = ValueBuilder(value)
+        nameBuilder = PropertyBuilder(value)
         return this
     }
 
@@ -122,8 +126,8 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
             return this
         }
 
-        fun build(): ConfigSource {
-            return ConfigSource(format, rootKey)
+        fun build(): PropertiesSource {
+            return PropertiesSource(format, rootKey)
         }
 
         override fun config(): ConfigSourceBuilder {
@@ -131,10 +135,10 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         }
     }
 
-    class ValueBuilder(val value: String) {
+    class PropertyBuilder(val value: String) {
         fun build(locator: Locator): String =
                 when {
-                    value.startsWith(":") -> locator.value(value.substringAfter(":"))
+                    value.startsWith(":") -> locator.property(value.substringAfter(":"))
                     else -> value
                 }
     }

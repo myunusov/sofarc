@@ -10,78 +10,92 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
+import org.jetbrains.spek.api.dsl.on
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
+import org.maxur.sofarc.core.service.properties.PropertiesService
+import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
+import org.maxur.sofarc.core.service.properties.PropertiesSource
 
 class MicroServiceSpec : Spek({
 
-    describe("a micro-service dsl") {
-
+    describe("a micro-service dsl Builder") {
         val sut = MicroService
 
-        it("should return new micro-service without embedded services") {
-            val service = sut.service()
-                    .build()
-            service.should.be.not.`null`
-        }
+        on ("Build microservice without properties source") {
 
-        it("should return new micro-service with defined name") {
-            val service: MicroService = sut.service()
-                    .name("TEST1")
-                    .build()
-            service.should.be.not.`null`
-            service.name.should.be.equal("TEST1")
-        }
-
-        it("should throw exception with defined config key for name without configuration") {
-            try {
-                val service: MicroService = sut.service()
-                        .name(":name")
+            it("should return new micro-service without embedded services") {
+                val service = sut.service()
                         .build()
-                expect(service).to.be.`null`
-            } catch (e: IllegalStateException) {
-                expect(e.message).to.be.equal("Service Configuration is not found. Key 'name' unresolved")
+                service.should.be.not.`null`
             }
+
+            it("should return new micro-service with defined name") {
+                val service: MicroService = sut.service()
+                        .name("TEST1")
+                        .build()
+                service.should.be.not.`null`
+                service.name.should.be.equal("TEST1")
+            }
+
+            it("should throw exception with any property key") {
+                try {
+                    val service: MicroService = sut.service()
+                            .name(":name")
+                            .build()
+                    expect(service).to.be.`null`
+                } catch (e: IllegalStateException) {
+                    expect(e.message).to.be.equal("Service Configuration is not found. Key 'name' unresolved")
+                }
+            }
+
         }
 
-        val binder = Binder()
+        on ("Build microservice with properties source") {
+            val binder = Binder()
 
-        it("return new micro-service with defined config key for name") {
-            val builder =
-                    sut.service(binder)
-                    .config().format("config")
-                    .name(":name") as MicroServiceBuilder
-            val service = builder.build()
-            service.should.be.not.`null`
-            service.name.should.be.equal("name")
+            it("return new micro-service with name from properties") {
+                val builder =
+                        sut.service(binder)
+                                .config().format("config")
+                                .name(":name") as MicroServiceBuilder
+                val service = builder.build()
+                service.should.be.not.`null`
+                service.name.should.be.equal("name")
+            }
+
+            it("return and start new micro-service with embedded service") {
+                val builder =
+                        sut.service(binder)
+                                .embed("service")
+                                .name("TEST2") as MicroServiceBuilder
+
+                val service = builder.build()
+                service.should.be.not.`null`
+                service.start()
+                verify(binder.embeddedService, times(1)).start()
+                verify(binder.embeddedService, times(0)).stop()
+            }
+
         }
 
-        it("return new micro-service with embedded service") {
-            val builder =
-                    sut.service(binder)
-                    .embed("service")
-                            .name("TEST2") as MicroServiceBuilder
-
-            val service = builder.build()
-            service.should.be.not.`null`
-            service.start()
-            verify(binder.embeddedService, times(1)).start()
-            verify(binder.embeddedService, times(0)).stop()
-        }
-        
     }
 })
 
 class Binder : AbstractBinder() {
 
-    val propertiesService = mock<PropertiesService> {
-        on { asString("name") } doReturn "name"
+    class TestPropertiesServiceFactory : PropertiesServiceFactory() {
+        override fun make(source: PropertiesSource): PropertiesService? = mock {
+            on { asString("name") } doReturn "name"
+        }
     }
+
     val embeddedService = mock<EmbeddedService> {
     }
 
     override fun configure() {
-        bind(propertiesService).named("config").to(PropertiesService::class.java)
+        bind(TestPropertiesServiceFactory::class.java).named("config").to(PropertiesServiceFactory::class.java)
         bind(embeddedService).named("service").to(EmbeddedService::class.java)
     }
+
 }
 

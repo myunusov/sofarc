@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core.service.properties
 
 import org.jvnet.hk2.annotations.Contract
 import java.net.URI

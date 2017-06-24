@@ -1,6 +1,5 @@
 package org.maxur.sofarc.core.service.properties
 
-import org.maxur.sofarc.core.service.PropertiesService
 import java.net.URI
 
 class NullPropertiesService : PropertiesService {

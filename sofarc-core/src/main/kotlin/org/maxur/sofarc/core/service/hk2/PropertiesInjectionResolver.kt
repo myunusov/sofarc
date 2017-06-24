@@ -4,8 +4,7 @@ import org.glassfish.hk2.api.Injectee
 import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.ServiceHandle
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.service.PropertiesService
-import org.maxur.sofarc.core.service.properties.PropertiesServiceHolder
+import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Constructor
@@ -21,9 +20,7 @@ import javax.inject.Inject
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-class PropertiesInjectionResolver @Inject constructor(holder: PropertiesServiceHolder) : InjectionResolver<Value> {
-
-    val propertiesService: PropertiesService = holder.propertiesService
+class PropertiesInjectionResolver @Inject constructor(val service: PropertiesService) : InjectionResolver<Value> {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(PropertiesInjectionResolver::class.java)
@@ -53,12 +50,7 @@ class PropertiesInjectionResolver @Inject constructor(holder: PropertiesServiceH
             } else {
                 annotations = (element as Constructor<*>).parameterAnnotations[injectee.position]
             }
-
-            for (annotation in annotations) {
-                if (annotation is Value) {
-                    return annotation
-                }
-            }
+            annotations.filterIsInstance<Value>().forEach { return it }
         }
 
         // check injectee itself (method, constructor or field)
@@ -73,12 +65,12 @@ class PropertiesInjectionResolver @Inject constructor(holder: PropertiesServiceH
 
 
     private fun resolveByKey(name: String, type: Type): Any? {
-        if (!(type is Class<*>)) {
+        if (type !is Class<*>) {
             val msg = "Unsupported property type '${type.typeName}'"
             log.error(msg)
             throw IllegalStateException(msg)
         }
-        return propertiesService.read(name, type)
+        return service.read(name, type)
     }
 
     override fun isConstructorParameterIndicator(): Boolean {
