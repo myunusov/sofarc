@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.grizzly
+package org.maxur.sofarc.core.service.eservice.grizzly
 
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
@@ -10,9 +10,9 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.rest.RestResourceConfig
-import org.maxur.sofarc.core.service.WebServer
-import org.maxur.sofarc.core.service.grizzly.config.StaticContent
-import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
+import org.maxur.sofarc.core.service.eservice.WebServer
+import org.maxur.sofarc.core.service.eservice.grizzly.properties.StaticContent
+import org.maxur.sofarc.core.service.eservice.grizzly.properties.WebAppProperties
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -35,7 +35,7 @@ import javax.ws.rs.core.FeatureContext
 @Service(name = "Grizzly")
 open class WebServerGrizzlyImpl
 @Inject constructor(
-        @Value(key = "webapp") val webConfig: WebAppConfig,
+        @Value(key = "webapp") val webConfig: WebAppProperties,
         val config: RestResourceConfig,
         val locator: ServiceLocator
 ) : WebServer(webConfig.url) {

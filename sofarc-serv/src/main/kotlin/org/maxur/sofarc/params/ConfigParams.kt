@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
-import org.maxur.sofarc.core.service.grizzly.config.WebAppConfig
+import org.maxur.sofarc.core.service.eservice.grizzly.properties.WebAppProperties
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -20,7 +20,7 @@ import javax.inject.Inject
  */
 @Service
 class ConfigParams @Inject constructor(
-        @Value(key = "webapp") val webapp: WebAppConfig,
+        @Value(key = "webapp") val webapp: WebAppProperties,
         @Value(key = "name")   val name: String
 ) {
 

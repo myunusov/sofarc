@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.grizzly.config
+package org.maxur.sofarc.core.service.eservice.grizzly.properties
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -12,7 +12,7 @@ import java.net.URI
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-class WebAppConfig(
+class WebAppProperties(
         @JsonProperty("url") val url: URI,
         @JsonProperty("api-path") val apiPath: String,
         @JsonProperty("static-content", required = false) staticContent: Array<StaticContent>?,

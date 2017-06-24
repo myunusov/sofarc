@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.grizzly
+package org.maxur.sofarc.core.service.eservice.grizzly
 
 import org.glassfish.grizzly.Grizzly
 import org.glassfish.grizzly.http.Method

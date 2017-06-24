@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core.service.eservice
 
 import org.jvnet.hk2.annotations.Contract
 import org.slf4j.Logger

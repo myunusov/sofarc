@@ -4,6 +4,7 @@ package org.maxur.sofarc.core.service
 
 import org.glassfish.hk2.utilities.Binder
 import org.jvnet.hk2.annotations.Service
+import org.maxur.sofarc.core.service.eservice.EmbeddedService
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
 

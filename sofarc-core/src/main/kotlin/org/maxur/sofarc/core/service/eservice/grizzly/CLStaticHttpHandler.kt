@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.grizzly
+package org.maxur.sofarc.core.service.eservice.grizzly
 
 /**
  * @author myunusov
@@ -18,7 +18,7 @@ import org.glassfish.grizzly.http.util.Header
 import org.glassfish.grizzly.http.util.HttpStatus
 import org.glassfish.grizzly.memory.MemoryManager
 import org.glassfish.grizzly.utils.ArraySet
-import org.maxur.sofarc.core.service.grizzly.config.StaticContent
+import org.maxur.sofarc.core.service.eservice.grizzly.properties.StaticContent
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException

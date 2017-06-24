@@ -3,10 +3,10 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
-import org.maxur.sofarc.core.service.EmbeddedService
+import org.maxur.sofarc.core.service.eservice.EmbeddedService
 import org.maxur.sofarc.core.service.Locator
 import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.WebServer
+import org.maxur.sofarc.core.service.eservice.WebServer
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 
 interface Builder {
@@ -174,7 +174,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         
         fun build(locator: Locator): EmbeddedService = func.invoke(name, clazz, locator)
 
-        constructor(parent: MicroServiceBuilder, service: EmbeddedService) : this(parent, {_, _, _ -> service} )
+        constructor(parent: MicroServiceBuilder, service: EmbeddedService) : this(parent, { _, _, _ -> service} )
 
         constructor(parent: MicroServiceBuilder, value: String) : this(parent, { n, c, l -> make(n, c, l) } ) {
             name = value
