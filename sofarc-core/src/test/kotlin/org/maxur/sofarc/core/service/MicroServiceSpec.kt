@@ -12,7 +12,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 
-class MicroServiceTest: Spek({
+class MicroServiceSpec : Spek({
 
     describe("a micro-service dsl") {
 
