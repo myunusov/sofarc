@@ -4,7 +4,7 @@ import dk.nykredit.jackson.dataformat.hal.HALLink
 import dk.nykredit.jackson.dataformat.hal.annotation.Link
 import dk.nykredit.jackson.dataformat.hal.annotation.Resource
 import io.swagger.annotations.*
-import org.maxur.sofarc.core.service.MicroService
+import org.maxur.sofarc.core.MicroService
 import java.net.URI
 import javax.inject.Inject
 import javax.ws.rs.*

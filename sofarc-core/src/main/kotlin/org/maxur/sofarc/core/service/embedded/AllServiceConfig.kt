@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.eservice
+package org.maxur.sofarc.core.service.embedded
 
 /**
  * @author myunusov

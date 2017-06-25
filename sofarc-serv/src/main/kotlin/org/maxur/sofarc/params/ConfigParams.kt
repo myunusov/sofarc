@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
-import org.maxur.sofarc.core.service.eservice.grizzly.properties.WebAppProperties
+import org.maxur.sofarc.core.service.embedded.properties.WebAppProperties
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.inject.Inject

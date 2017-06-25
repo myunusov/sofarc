@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core
 
 interface Locator {
 

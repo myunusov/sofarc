@@ -10,7 +10,7 @@ import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.server.ServerProperties
 import org.jvnet.hk2.annotations.Contract
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.service.eservice.grizzly.properties.WebAppProperties
+import org.maxur.sofarc.core.service.embedded.properties.WebAppProperties
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.ws.rs.core.Feature

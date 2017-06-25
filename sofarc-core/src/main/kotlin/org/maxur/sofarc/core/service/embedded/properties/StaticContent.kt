@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.eservice.grizzly.properties
+package org.maxur.sofarc.core.service.embedded.properties
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

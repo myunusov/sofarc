@@ -1,17 +1,17 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.eservice.grizzly
+package org.maxur.sofarc.core.service.embedded.grizzly
 
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
+import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.rest.RestResourceConfig
-import org.maxur.sofarc.core.service.Locator
-import org.maxur.sofarc.core.service.eservice.WebServer
-import org.maxur.sofarc.core.service.eservice.grizzly.properties.StaticContent
-import org.maxur.sofarc.core.service.eservice.grizzly.properties.WebAppProperties
+import org.maxur.sofarc.core.service.embedded.WebServer
+import org.maxur.sofarc.core.service.embedded.properties.StaticContent
+import org.maxur.sofarc.core.service.embedded.properties.WebAppProperties
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -27,41 +27,20 @@ import javax.ws.rs.core.FeatureContext
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-open class WebServerGrizzlyImpl : WebServer<WebAppProperties> {
+open class WebServerGrizzlyImpl(
+        properties: WebAppProperties?,
+        private val config: RestResourceConfig,
+        private val locator: Locator) : WebServer() {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
 
-    private val config: RestResourceConfig
-
-    private val locator: ServiceLocator
-
-    private val properties: WebAppProperties
-
     private lateinit var httpServer: HttpServer
 
     override val baseUri: URI get() = properties.url
 
-    constructor(
-            properties: WebAppProperties,
-            config: RestResourceConfig,
-            locator: Locator
-    ): super(properties) {
-        this.config = config
-        this.locator = locator.implementation()
-        this.properties = properties()!!
-    }
-
-    constructor(
-            propertyKey: String,
-            config: RestResourceConfig,
-            locator: Locator
-    ): super(locator, propertyKey) {
-        this.config = config
-        this.locator = locator.implementation()
-        this.properties = properties()!!
-    }
+    private val properties: WebAppProperties = properties!!
 
     override val name: String
         get() {
@@ -104,7 +83,8 @@ open class WebServerGrizzlyImpl : WebServer<WebAppProperties> {
     }
 
     private fun httpServer(): HttpServer {
-        val server = GrizzlyHttpServerFactory.createHttpServer(properties.apiUri, config, locator)
+        val implementation: ServiceLocator = locator.implementation<ServiceLocator>()
+        val server = GrizzlyHttpServerFactory.createHttpServer(properties.apiUri, config, implementation)
         val result = server
         result.serverConfiguration.isPassTraceRequest = true
         result.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8

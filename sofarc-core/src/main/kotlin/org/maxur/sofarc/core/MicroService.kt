@@ -1,10 +1,10 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service
+package org.maxur.sofarc.core
 
 import org.glassfish.hk2.utilities.Binder
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.service.eservice.EmbeddedService
+import org.maxur.sofarc.core.service.embedded.EmbeddedService
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -20,7 +20,7 @@ import javax.inject.Inject
  * @since <pre>12.06.2017</pre>
  */
 @Service
-class MicroService @Inject constructor(val service: EmbeddedService<Any>) {
+class MicroService @Inject constructor(val service: EmbeddedService) {
 
     companion object {
         fun service(vararg binders: Binder): MicroServiceBuilder = MicroServiceBuilder(*binders)

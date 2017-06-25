@@ -8,8 +8,8 @@ import org.glassfish.hk2.utilities.Binder
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.service.Locator
-import org.maxur.sofarc.core.service.eservice.AllServiceConfig
+import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.service.embedded.AllServiceConfig
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import javax.inject.Singleton

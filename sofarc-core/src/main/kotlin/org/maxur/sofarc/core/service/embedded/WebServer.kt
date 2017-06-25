@@ -1,7 +1,6 @@
-package org.maxur.sofarc.core.service.eservice
+package org.maxur.sofarc.core.service.embedded
 
 import org.jvnet.hk2.annotations.Contract
-import org.maxur.sofarc.core.service.Locator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -12,7 +11,7 @@ import java.net.URI
  * @since <pre>12.06.2017</pre>
  */
 @Contract
-abstract class WebServer<P: Any>: EmbeddedService<P> {
+abstract class WebServer: EmbeddedService() {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
@@ -21,10 +20,6 @@ abstract class WebServer<P: Any>: EmbeddedService<P> {
     abstract val name: String
 
     abstract val baseUri: URI
-
-    constructor(properties: P): super(properties)
-
-    constructor(locator: Locator, propertyKey: String): super(locator, propertyKey)
 
     /**
      * Start Web server.

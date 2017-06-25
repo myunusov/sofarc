@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.eservice
+package org.maxur.sofarc.core.service.embedded
 
 /**
  * @author myunusov
@@ -10,13 +10,13 @@ data class ServiceConfig(val descriptor: Descriptor) {
     constructor(
             type: String,
             propertyKey: String?,
-            properties: Any?, clazz:
-            Class<*> = EmbeddedServiceFactory::class.java
+            properties: Any?,
+            clazz: Class<*> = EmbeddedServiceFactory::class.java
     ) : this(LookupDescriptor(type, propertyKey, properties, clazz))
 
-    constructor(service: EmbeddedService<Any>) : this(DirectDescriptor(service))
+    constructor(service: EmbeddedService) : this(DirectDescriptor(service))
 
-    interface Descriptor {}
+    interface Descriptor
 
     data class LookupDescriptor(
             val type: String,
@@ -25,6 +25,6 @@ data class ServiceConfig(val descriptor: Descriptor) {
             val clazz: Class<*> = EmbeddedServiceFactory::class.java
     ): Descriptor
 
-    data class DirectDescriptor(val service: EmbeddedService<Any>): Descriptor
+    data class DirectDescriptor(val service: EmbeddedService): Descriptor
 }
 

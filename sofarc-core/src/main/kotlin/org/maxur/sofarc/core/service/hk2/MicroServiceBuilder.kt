@@ -3,12 +3,12 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
-import org.maxur.sofarc.core.service.Locator
-import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.eservice.AllServiceConfig
-import org.maxur.sofarc.core.service.eservice.EmbeddedService
-import org.maxur.sofarc.core.service.eservice.EmbeddedServiceFactory
-import org.maxur.sofarc.core.service.eservice.ServiceConfig
+import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.service.embedded.AllServiceConfig
+import org.maxur.sofarc.core.service.embedded.EmbeddedService
+import org.maxur.sofarc.core.service.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.service.embedded.ServiceConfig
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import java.util.*
 
@@ -22,7 +22,7 @@ interface Builder {
 
     fun name(value: String): Builder
 
-    fun embed(vararg value: EmbeddedService<Any>): Builder
+    fun embed(vararg value: EmbeddedService): Builder
 
     fun embed(value: String): MicroServiceBuilder.ServiceBuilder
 
@@ -71,7 +71,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         return this
     }
 
-    override fun embed(vararg value: EmbeddedService<Any>): MicroServiceBuilder {
+    override fun embed(vararg value: EmbeddedService): MicroServiceBuilder {
         value.forEach {
             serviceBuilder.add(it)
         }
@@ -155,7 +155,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
         fun build(): AllServiceConfig {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, clazz))
+                configs.add(ServiceConfig(type, propertyKey, null, clazz))
             }
             return AllServiceConfig(Collections.unmodifiableCollection(configs))
         }
@@ -165,9 +165,9 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         }
 
 
-        fun add(service: EmbeddedService<Any>) {
+        fun add(service: EmbeddedService) {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, clazz))
+                configs.add(ServiceConfig(type, propertyKey, null, clazz))
             }
             configs.add(ServiceConfig(service))
             isPresent = false
@@ -175,7 +175,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
         fun add(value: String) {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, clazz))
+                configs.add(ServiceConfig(type, propertyKey, null, clazz))
             }
             isPresent = true
             type = value

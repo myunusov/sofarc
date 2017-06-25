@@ -1,10 +1,10 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.eservice
+package org.maxur.sofarc.core.service.embedded
 
 import org.glassfish.hk2.api.Factory
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.service.Locator
+import org.maxur.sofarc.core.Locator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.annotation.PostConstruct
@@ -15,18 +15,18 @@ class ServiceProvider
     @Inject constructor(
             val config: AllServiceConfig,
             val locator: Locator
-        ) : Factory<EmbeddedService<Any>> {
+        ) : Factory<EmbeddedService> {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(ServiceProvider::class.java)
     }
 
-    private val nullService = object : EmbeddedService<Any>() {
+    private val nullService = object : EmbeddedService() {
         override fun start() = Unit
         override fun stop() = Unit
     }
 
-    lateinit var service: EmbeddedService<Any>
+    lateinit var service: EmbeddedService
 
     @PostConstruct
     fun init() {
@@ -38,7 +38,7 @@ class ServiceProvider
         }
     }
 
-    private fun findService(cfg: ServiceConfig): EmbeddedService<Any>? {
+    private fun findService(cfg: ServiceConfig): EmbeddedService? {
         when (cfg.descriptor) {
             is ServiceConfig.DirectDescriptor -> return cfg.descriptor.service
             is ServiceConfig.LookupDescriptor -> return embeddedService(cfg.descriptor)
@@ -46,7 +46,7 @@ class ServiceProvider
         return null
     }
 
-    private fun embeddedService(cfg: ServiceConfig.LookupDescriptor): EmbeddedService<Any>? {
+    private fun embeddedService(cfg: ServiceConfig.LookupDescriptor): EmbeddedService? {
         @Suppress("UNCHECKED_CAST")
         val factory = locator.service(cfg.clazz, cfg.type) as EmbeddedServiceFactory<Any>?
         if (factory == null) {
@@ -66,9 +66,7 @@ class ServiceProvider
         }
     }
 
-    private fun makeNullService(): EmbeddedService<Any> {
-        return nullService
-    }
+    private fun makeNullService(): EmbeddedService = nullService
 
     private fun onError(cfg: ServiceConfig.LookupDescriptor) {
         val list = locator.names(cfg.clazz)
@@ -77,18 +75,14 @@ class ServiceProvider
         )
     }
 
-    override fun dispose(instance: EmbeddedService<Any>?) = Unit
-    override fun provide(): EmbeddedService<Any> = service
+    override fun dispose(instance: EmbeddedService?) = Unit
+    override fun provide(): EmbeddedService = service
 
-    class CompositeService(val services: List<EmbeddedService<Any>>) : EmbeddedService<Any>() {
+    class CompositeService(val services: List<EmbeddedService>) : EmbeddedService() {
 
-        override fun start() {
-            services.forEach( { it.start() })
-        }
+        override fun start() = services.forEach( { it.start() })
 
-        override fun stop() {
-            services.reversed().forEach( { it.stop() })
-        }
+        override fun stop() = services.reversed().forEach( { it.stop() })
 
     }
 

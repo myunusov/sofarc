@@ -1,12 +1,12 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.api.ServiceLocator
-import org.maxur.sofarc.core.service.Locator
+import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import javax.inject.Inject
 
 
-class LocatorHK2Impl @Inject constructor(val locator: ServiceLocator) : Locator  {
+class LocatorHK2Impl @Inject constructor(val locator: ServiceLocator) : Locator {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> implementation(): T = locator as T

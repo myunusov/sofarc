@@ -1,7 +1,7 @@
 package org.maxur.sofarc.serv
 
-import org.maxur.sofarc.core.service.MicroService
-import org.maxur.sofarc.core.service.MicroService.Companion.service
+import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.MicroService.Companion.service
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 

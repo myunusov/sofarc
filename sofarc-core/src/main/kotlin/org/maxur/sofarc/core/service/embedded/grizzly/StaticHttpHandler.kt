@@ -1,9 +1,9 @@
-package org.maxur.sofarc.core.service.eservice.grizzly
+package org.maxur.sofarc.core.service.embedded.grizzly
 
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
-import org.maxur.sofarc.core.service.eservice.grizzly.properties.StaticContent
+import org.maxur.sofarc.core.service.embedded.properties.StaticContent
 import java.io.File
 
 /**
