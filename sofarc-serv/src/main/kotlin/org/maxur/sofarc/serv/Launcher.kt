@@ -44,7 +44,6 @@ object Launcher {
 
     fun onError(service: MicroService, exception: Exception) {
         log().error(exception.message, exception)
-        service.stop()
     }
 
 }

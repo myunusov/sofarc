@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.embedded
+package org.maxur.sofarc.core.embedded
 
 import org.jvnet.hk2.annotations.Contract
 import org.slf4j.Logger

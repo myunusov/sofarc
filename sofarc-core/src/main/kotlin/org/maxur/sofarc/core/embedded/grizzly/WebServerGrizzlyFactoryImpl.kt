@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.embedded.grizzly
+package org.maxur.sofarc.core.embedded.grizzly
 
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
@@ -8,13 +8,13 @@ import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.embedded.EmbeddedService
+import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.embedded.ServiceDescriptor
+import org.maxur.sofarc.core.embedded.WebServer
+import org.maxur.sofarc.core.embedded.properties.StaticContent
+import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.rest.RestResourceConfig
-import org.maxur.sofarc.core.service.embedded.EmbeddedService
-import org.maxur.sofarc.core.service.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.service.embedded.ServiceDescriptor
-import org.maxur.sofarc.core.service.embedded.WebServer
-import org.maxur.sofarc.core.service.embedded.properties.StaticContent
-import org.maxur.sofarc.core.service.embedded.properties.WebAppProperties
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -31,7 +31,7 @@ class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceCo
     : EmbeddedServiceFactory<WebAppProperties>() {
 
     override fun make(cfg: ServiceDescriptor<WebAppProperties>): EmbeddedService? =
-            WebServerGrizzlyImpl(properties(cfg)!! , config, locator)
+            WebServerGrizzlyImpl(properties(cfg)!!, config, locator)
 
 }
 
@@ -116,7 +116,7 @@ open class WebServerGrizzlyImpl(
 
     private fun addHalBrowser(serverConfiguration: ServerConfiguration) {
         val doc = StaticContent(
-                arrayOf("/META-INF/resources/webjars/swagger-ui/3.0.14/"),
+                arrayOf(URI("/META-INF/resources/webjars/swagger-ui/3.0.14/")),
                 "/docs",
                 "index.html"
         )
@@ -129,7 +129,7 @@ open class WebServerGrizzlyImpl(
 
     private fun addSwaggerUi(serverConfiguration: ServerConfiguration) {
         val hal = StaticContent(
-                arrayOf("/META-INF/resources/webjars/hal-browser/3325375/"),
+                arrayOf(URI("/META-INF/resources/webjars/hal-browser/3325375/")),
                 "/hal",
                 "browser.html"
         )

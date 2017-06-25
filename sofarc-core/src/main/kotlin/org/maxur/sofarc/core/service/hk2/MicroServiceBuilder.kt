@@ -5,7 +5,7 @@ package org.maxur.sofarc.core.service.hk2
 import org.glassfish.hk2.utilities.Binder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.MicroService
-import org.maxur.sofarc.core.service.embedded.*
+import org.maxur.sofarc.core.embedded.*
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import java.util.*
 

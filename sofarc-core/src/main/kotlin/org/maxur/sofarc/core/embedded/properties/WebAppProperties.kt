@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.embedded.properties
+package org.maxur.sofarc.core.embedded.properties
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.SerializationFeature

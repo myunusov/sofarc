@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.embedded
+package org.maxur.sofarc.core.embedded
 
 import org.glassfish.hk2.api.ActiveDescriptor
 import org.glassfish.hk2.api.Self

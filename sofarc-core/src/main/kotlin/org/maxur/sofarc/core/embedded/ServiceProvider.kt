@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package org.maxur.sofarc.core.service.embedded
+package org.maxur.sofarc.core.embedded
 
 import org.glassfish.hk2.api.Factory
 import org.jvnet.hk2.annotations.Service

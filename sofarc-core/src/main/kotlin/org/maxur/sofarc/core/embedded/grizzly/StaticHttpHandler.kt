@@ -1,10 +1,12 @@
-package org.maxur.sofarc.core.service.embedded.grizzly
+package org.maxur.sofarc.core.embedded.grizzly
 
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
-import org.maxur.sofarc.core.service.embedded.properties.StaticContent
+import org.maxur.sofarc.core.embedded.properties.StaticContent
 import java.io.File
+import java.net.URI
+import java.nio.file.Paths
 
 /**
  * [HttpHandler], which processes requests to a static resources.
@@ -46,8 +48,16 @@ class StaticHttpHandler(staticContent: StaticContent) : AbstractStaticHttpHandle
      */
     init {
         defaultPage = staticContent.page
-        docRoots = staticContent.roots.map {
-            File(it)
+        docRoots = staticContent
+                .roots.map { makeRoot(it) }
+                .filterNotNull()
+    }
+
+    private fun makeRoot(it: URI): File? {
+        return when (it.scheme) {
+            "file" -> Paths.get(it).toFile()
+            null -> File(it.toString())
+            else -> null
         }
     }
 

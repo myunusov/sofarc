@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.embedded
+package org.maxur.sofarc.core.embedded
 
 import org.maxur.sofarc.core.Locator
 

@@ -1,4 +1,4 @@
-package org.maxur.sofarc.core.service.embedded.grizzly
+package org.maxur.sofarc.core.embedded.grizzly
 
 /**
  * @author myunusov
@@ -17,8 +17,7 @@ import org.glassfish.grizzly.http.server.StaticHttpHandlerBase
 import org.glassfish.grizzly.http.util.Header
 import org.glassfish.grizzly.http.util.HttpStatus
 import org.glassfish.grizzly.memory.MemoryManager
-import org.glassfish.grizzly.utils.ArraySet
-import org.maxur.sofarc.core.service.embedded.properties.StaticContent
+import org.maxur.sofarc.core.embedded.properties.StaticContent
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -44,12 +43,12 @@ import java.util.logging.Level
 class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticContent) : AbstractStaticHttpHandler() {
 
     // path prefixes to be used
-    private val docRoots = ArraySet(String::class.java)
+    private val docRoots = HashSet<String>()
 
     /**
      * default page
      */
-    private val defaultPage: String
+    private val defaultPage: String = staticContent.page
 
     /**
      *  This staticContent is the static content configuration
@@ -66,13 +65,12 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
      *  IllegalArgumentException if one of the docRoots doesn't end with slash ('/')
      */
     init {
-        defaultPage = staticContent.page
         val docRoots = staticContent.roots
-        if (docRoots.any({ !it.endsWith("/") })) {
+        if (docRoots.any({ !it.path.endsWith("/") })) {
             throw IllegalArgumentException("Doc root should end with slash ('/')")
         }
         if (docRoots.isNotEmpty()) {
-            this.docRoots.addAll(*docRoots)
+            this.docRoots.addAll(docRoots.map { it.path })
         } else {
             this.docRoots.add("/")
         }
@@ -236,13 +234,12 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
     }
 
     private fun lookupResource(resourcePath: String): URL? {
-        val docRootsLocal = docRoots.array
-        if (docRootsLocal == null || docRootsLocal.isEmpty()) {
+        if (docRoots.isEmpty()) {
             fine("No doc roots registered -> resource $resourcePath is not found ")
             return null
         }
 
-        for (docRoot in docRootsLocal) {
+        for (docRoot in docRoots) {
             val docRootPart: String
             when {
                 SLASH_STR == docRoot -> docRootPart = EMPTY_STR
@@ -308,11 +305,7 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
             private val log = Grizzly.logger(NonBlockingDownloadHandler::class.java)
         }
 
-        private val mm: MemoryManager<*>
-
-        init {
-            mm = response.request.context.memoryManager
-        }
+        private val mm: MemoryManager<*> = response.request.context.memoryManager
 
         @Throws(Exception::class)
         override fun onWritePossible() {
@@ -449,7 +442,7 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
 
     companion object {
 
-        protected val CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP =
+        private val CHECK_NON_SLASH_TERMINATED_FOLDERS_PROP =
                 CLStaticHttpHandler::class.java.name + ".check-non-slash-terminated-folders"
 
         /**

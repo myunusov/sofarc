@@ -4,7 +4,7 @@ package org.maxur.sofarc.core
 
 import org.glassfish.hk2.utilities.Binder
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.service.embedded.EmbeddedService
+import org.maxur.sofarc.core.embedded.EmbeddedService
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
 import javax.inject.Inject

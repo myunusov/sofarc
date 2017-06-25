@@ -12,9 +12,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.maxur.sofarc.core.MicroService
-import org.maxur.sofarc.core.service.embedded.EmbeddedService
-import org.maxur.sofarc.core.service.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.service.embedded.ServiceDescriptor
+import org.maxur.sofarc.core.embedded.EmbeddedService
+import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.embedded.ServiceDescriptor
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
