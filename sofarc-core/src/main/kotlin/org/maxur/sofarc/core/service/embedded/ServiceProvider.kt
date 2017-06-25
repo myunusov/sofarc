@@ -38,17 +38,18 @@ class ServiceProvider
         }
     }
 
-    private fun findService(cfg: ServiceConfig): EmbeddedService? {
-        when (cfg.descriptor) {
-            is ServiceConfig.DirectDescriptor -> return cfg.descriptor.service
-            is ServiceConfig.LookupDescriptor -> return embeddedService(cfg.descriptor)
+    private fun  findService(cfg: ServiceConfig): EmbeddedService? {
+        when (cfg) {
+            is ServiceProxy -> return cfg.service
+            is ServiceDescriptor<*> -> return embeddedService(cfg as ServiceDescriptor<Any>)
         }
         return null
     }
 
-    private fun embeddedService(cfg: ServiceConfig.LookupDescriptor): EmbeddedService? {
+    private fun embeddedService(cfg: ServiceDescriptor<Any>): EmbeddedService? {
         @Suppress("UNCHECKED_CAST")
-        val factory = locator.service(cfg.clazz, cfg.type) as EmbeddedServiceFactory<Any>?
+        val clazz = EmbeddedServiceFactory::class.java
+        val factory = locator.service(clazz, cfg.type) as EmbeddedServiceFactory<Any>?
         if (factory == null) {
             onError(cfg)
             return null
@@ -56,9 +57,6 @@ class ServiceProvider
         val result = factory.make(cfg)
         return if (result == null) {
             log.info("Service '${cfg.type}' is not configured\n")
-            null
-        } else if (cfg.clazz.isAssignableFrom(result::class.java)) {
-            log.info("Service '${cfg.type}' has wrong type\n")
             null
         } else {
             log.info("Service '${factory.name}' is configured\n")
@@ -68,8 +66,8 @@ class ServiceProvider
 
     private fun makeNullService(): EmbeddedService = nullService
 
-    private fun onError(cfg: ServiceConfig.LookupDescriptor) {
-        val list = locator.names(cfg.clazz)
+    private fun onError(cfg: ServiceDescriptor<Any>) {
+        val list = locator.names(EmbeddedServiceFactory::class.java)
         throw IllegalStateException(
                 "Service '${cfg.type}' is not supported. Try one from this list: $list"
         )

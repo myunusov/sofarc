@@ -1,30 +1,31 @@
 package org.maxur.sofarc.core.service.embedded
 
+import org.maxur.sofarc.core.Locator
+
 /**
  * @author myunusov
  * @version 1.0
  * @since <pre>24.06.2017</pre>
  */
-data class ServiceConfig(val descriptor: Descriptor) {
+interface ServiceConfig
 
-    constructor(
-            type: String,
-            propertyKey: String?,
-            properties: Any?,
-            clazz: Class<*> = EmbeddedServiceFactory::class.java
-    ) : this(LookupDescriptor(type, propertyKey, properties, clazz))
+class ServiceDescriptor<PropertiesType>(
+        val type: String,
+        val propertyKey: String?,
+        val properties: PropertiesType?
+) : ServiceConfig {
 
-    constructor(service: EmbeddedService) : this(DirectDescriptor(service))
+    fun <R : PropertiesType> properties(locator: Locator, clazz: Class<R>): R? {
+        @Suppress("UNCHECKED_CAST")
+        return when {
+            properties != null -> properties as R
+            propertyKey != null -> {
+                locator.properties(propertyKey, clazz)
+            }
+            else -> null
+        }
+    }
 
-    interface Descriptor
-
-    data class LookupDescriptor(
-            val type: String,
-            val propertyKey: String?,
-            val properties: Any?,
-            val clazz: Class<*> = EmbeddedServiceFactory::class.java
-    ): Descriptor
-
-    data class DirectDescriptor(val service: EmbeddedService): Descriptor
 }
 
+data class ServiceProxy(val service: EmbeddedService) : ServiceConfig

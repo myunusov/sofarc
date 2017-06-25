@@ -5,10 +5,7 @@ package org.maxur.sofarc.core.service.hk2
 import org.glassfish.hk2.utilities.Binder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.MicroService
-import org.maxur.sofarc.core.service.embedded.AllServiceConfig
-import org.maxur.sofarc.core.service.embedded.EmbeddedService
-import org.maxur.sofarc.core.service.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.service.embedded.ServiceConfig
+import org.maxur.sofarc.core.service.embedded.*
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import java.util.*
 
@@ -151,11 +148,11 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         var clazz: Class<out EmbeddedServiceFactory<Any>> =
                 EmbeddedServiceFactory::class.java as Class<out EmbeddedServiceFactory<Any>>
         // TODO
-        var propertyKey : String? = "webapp"
+        var propertyKey : String = "webapp"
 
         fun build(): AllServiceConfig {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, null, clazz))
+                configs.add(ServiceDescriptor<Any>(type, propertyKey, null))
             }
             return AllServiceConfig(Collections.unmodifiableCollection(configs))
         }
@@ -167,15 +164,15 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
         fun add(service: EmbeddedService) {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, null, clazz))
+                configs.add(ServiceDescriptor<Any>(type, propertyKey, null))
             }
-            configs.add(ServiceConfig(service))
+            configs.add(ServiceProxy(service))
             isPresent = false
         }
 
         fun add(value: String) {
             if (isPresent) {
-                configs.add(ServiceConfig(type, propertyKey, null, clazz))
+                configs.add(ServiceDescriptor<Any>(type, propertyKey, null))
             }
             isPresent = true
             type = value

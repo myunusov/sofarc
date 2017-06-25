@@ -13,15 +13,14 @@ import javax.inject.Inject
  * @since <pre>24.06.2017</pre>
  */
 @Contract
-abstract class EmbeddedServiceFactory<P: Any> {
-
-    inline fun <reified R: P> properties(key: String, locator: Locator): R? {
-        return locator.properties(key, R::class.java)
-    }
+abstract class EmbeddedServiceFactory<PropertiesType: Any> {
 
     @Inject
     @Self
     private var descriptor: ActiveDescriptor<*>? = null
+
+    @Inject
+    lateinit var locator: Locator
 
     lateinit var name: String
 
@@ -30,6 +29,9 @@ abstract class EmbeddedServiceFactory<P: Any> {
        name = descriptor?.name ?: "Undefined"
     }
 
-    abstract fun make(cfg: ServiceConfig.LookupDescriptor): EmbeddedService?
+    inline fun <reified R : PropertiesType> properties(cfg: ServiceDescriptor<R>): R?
+            = cfg.properties(locator, R::class.java)
+
+    abstract fun make(cfg: ServiceDescriptor<PropertiesType>): EmbeddedService?
 
 }
