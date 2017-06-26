@@ -94,10 +94,10 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
     fun deferredRestart() {
         try {
             postpone({
-                service.start()
+                service.stop()
                 afterStop.invoke(this)
                 beforeStart.invoke(this)
-                service.stop()
+                service.start()
             })
         } catch(e: Exception) {
             error(e)

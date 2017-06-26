@@ -29,9 +29,9 @@ abstract class EmbeddedServiceFactory<PropertiesType: Any> {
        name = descriptor?.name ?: "Undefined"
     }
 
-    inline fun <reified R : PropertiesType> properties(cfg: ServiceDescriptor<R>): R?
+    inline fun <reified R : PropertiesType> properties(cfg: ServiceConfig): R?
             = cfg.properties(locator, R::class.java)
 
-    abstract fun make(cfg: ServiceDescriptor<PropertiesType>): EmbeddedService?
+    abstract fun make(cfg: ServiceConfig): EmbeddedService?
 
 }

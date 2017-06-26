@@ -6,4 +6,4 @@ package org.maxur.sofarc.core.embedded
  * @since <pre>24.06.2017</pre>
  */
 
-data class AllServiceConfig(val serviceConfigs: Collection<ServiceConfig>)
+data class MicroServiceConfig(val serviceConfigs: Collection<ServiceConfig>)

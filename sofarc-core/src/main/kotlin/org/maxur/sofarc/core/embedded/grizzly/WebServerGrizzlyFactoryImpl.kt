@@ -26,7 +26,7 @@ import javax.inject.Inject
 class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceConfig)
     : EmbeddedServiceFactory<WebAppProperties>() {
 
-    override fun make(cfg: ServiceDescriptor<WebAppProperties>): EmbeddedService? =
+    override fun make(cfg: ServiceConfig): EmbeddedService? =
             WebServerGrizzlyImpl(properties(cfg)!!, config, locator)
 
 }
@@ -40,15 +40,13 @@ open class WebServerGrizzlyImpl(
         val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
     }
 
+    fun ServerConfiguration.title(): String = "$name '$httpServerName-$httpServerVersion'"
+
     private lateinit var httpServer: HttpServer
 
     override val baseUri: URI get() = properties.url
 
-    override val name: String
-        get() {
-            val cfg = httpServer.serverConfiguration
-            return "${cfg.name} '${cfg.httpServerName}-${cfg.httpServerVersion}'"
-        }
+    override val name: String get() = httpServer.serverConfiguration.title()
 
     override fun entries(): WebEntries {
         val cfg = httpServer.serverConfiguration

@@ -9,7 +9,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.Locator
-import org.maxur.sofarc.core.embedded.AllServiceConfig
+import org.maxur.sofarc.core.embedded.MicroServiceConfig
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import javax.inject.Singleton
@@ -33,7 +33,7 @@ class LocatorFactoryHK2Impl {
         return locator.getService(Locator::class.java)
     }
 
-    fun bind(serviceConfig: AllServiceConfig) : LocatorFactoryHK2Impl {
+    fun bind(serviceConfig: MicroServiceConfig) : LocatorFactoryHK2Impl {
         this.binders.add(ServiceConfigBiner(serviceConfig))
         return this
     }
@@ -57,9 +57,9 @@ class LocatorFactoryHK2Impl {
         }
     }
 
-    private class ServiceConfigBiner(val serviceConfig: AllServiceConfig) : AbstractBinder() {
+    private class ServiceConfigBiner(val serviceConfig: MicroServiceConfig) : AbstractBinder() {
         override fun configure() {
-            bind(serviceConfig).to(AllServiceConfig::class.java)
+            bind(serviceConfig).to(MicroServiceConfig::class.java)
         }
     }
 
