@@ -65,14 +65,23 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
      *  IllegalArgumentException if one of the docRoots doesn't end with slash ('/')
      */
     init {
-        val docRoots = staticContent.roots
-        if (docRoots.any({ !it.path.endsWith("/") })) {
+        val roots = staticContent.roots
+                .map { makeRoot(it) }
+                .filterNotNull()
+        if (roots.any({ !it.endsWith("/") })) {
             throw IllegalArgumentException("Doc root should end with slash ('/')")
         }
-        if (docRoots.isNotEmpty()) {
-            this.docRoots.addAll(docRoots.map { it.path })
+        if (roots.isNotEmpty()) {
+            this.docRoots.addAll(roots)
         } else {
             this.docRoots.add("/")
+        }
+    }
+    
+    private fun makeRoot(it: URI): String? {
+        return when (it.scheme) {
+            "classpath" -> it.toString().substring("classpath".length + 1)
+            else -> null
         }
     }
 
@@ -80,7 +89,7 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
      * {@inheritDoc}
      */
     @Throws(Exception::class)
-    override fun handle(resourcePath: String, request: Request, response: Response): Boolean {
+    public override fun handle(resourcePath: String, request: Request, response: Response): Boolean {
 
         var path = resourcePath
         if (path.startsWith(SLASH_STR)) {

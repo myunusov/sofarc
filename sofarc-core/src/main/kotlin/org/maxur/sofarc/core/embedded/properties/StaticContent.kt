@@ -8,23 +8,25 @@ import java.net.URI
 class StaticContent(
         @JsonProperty("roots")         val roots: Array<URI>,
         @JsonProperty("path")          val path: String,
-        @JsonProperty("default-page", required = false) page: String?
+        @JsonProperty("default-page", required = false) page: String?,
+        @JsonProperty("start-url", required = false) val startUrl: String? = ""
 ) {
     val page = page ?: "index.html"
 
     val normalisePath: String = normalisePath(path)
 
-    private val schemes: Array<String> = roots.map { it.scheme }.distinct().toTypedArray()
-
-    val scheme: String = when {
-        schemes contentEquals arrayOf(null, "file") -> "file"
-        schemes contentEquals arrayOf("classpath") -> "classpath"
-        else -> "unsupported"
-    }
-    
     private fun normalisePath(path: String): String {
         val ex = path.replace("/{2,}".toRegex(), "/")
         return if (ex.endsWith("/")) ex.substring(0, ex.length - 1) else ex
     }
-    
+
+    private fun normalizeScheme(scheme: String?): String = scheme ?: "file"
+
+    fun fileContent(): StaticContent =
+            StaticContent(roots.filter {it.scheme in arrayOf (null, "file") }.toTypedArray(), path, page)
+
+    fun clContent(): StaticContent =
+            StaticContent(roots.filter {it.scheme == "classpath" }.toTypedArray(), path, page)
+
+
 }

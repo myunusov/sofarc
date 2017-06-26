@@ -65,7 +65,7 @@ class StaticHttpHandler(staticContent: StaticContent) : AbstractStaticHttpHandle
      * {@inheritDoc}
      */
     @Throws(Exception::class)
-    override fun handle(uri: String, request: Request, response: Response): Boolean {
+    public override fun handle(uri: String, request: Request, response: Response): Boolean {
         for (webDir in docRoots) {
             val resource: Resource = Resource(webDir, uri)
             if (!resource.exists) {

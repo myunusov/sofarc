@@ -28,7 +28,7 @@ abstract class WebServer: EmbeddedService() {
         log.info("Start Web Server")
         launch()
         log.info("${name} is started on $baseUri")
-        logEntries()
+        log.info(entries().toString())
     }
 
     /**
@@ -40,7 +40,7 @@ abstract class WebServer: EmbeddedService() {
         log.info("Web Server is stopped")
     }
 
-    protected abstract fun logEntries()
+    protected abstract fun entries(): WebEntries
     
 
     /**

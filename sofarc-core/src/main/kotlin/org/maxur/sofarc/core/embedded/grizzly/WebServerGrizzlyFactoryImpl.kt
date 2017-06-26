@@ -8,11 +8,7 @@ import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.Locator
-import org.maxur.sofarc.core.embedded.EmbeddedService
-import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.embedded.ServiceDescriptor
-import org.maxur.sofarc.core.embedded.WebServer
-import org.maxur.sofarc.core.embedded.properties.StaticContent
+import org.maxur.sofarc.core.embedded.*
 import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.rest.RestResourceConfig
 import org.slf4j.Logger
@@ -54,27 +50,19 @@ open class WebServerGrizzlyImpl(
             return "${cfg.name} '${cfg.httpServerName}-${cfg.httpServerVersion}'"
         }
 
-    override fun logEntries() {
-        log.info("Entries:")
+    override fun entries(): WebEntries {
         val cfg = httpServer.serverConfiguration
+        val entries = WebEntries(properties.url)
         cfg.httpHandlersWithMapping.forEach {
-            (_, regs) ->
-            run {
-                for (reg in regs) {
-                    val basePath = "${properties.url}${reg.contextPath}"
-                    when {
-                        reg.contextPath == "/docs" && properties.withSwaggerUi ->
-                            log.info("$basePath/index.html?url=/api/swagger.json")
-                        reg.contextPath == "/hal" && properties.withHalBrowser ->
-                            log.info("$basePath/#/api/service")
-                        else -> log.info("$basePath/")
-                    }
-                }
-                regs.filter { it.contextPath == "/docs" }.forEach {
-
-                }
+            (_, regs) -> run {
+                for (reg in regs) entries.add(
+                        reg.contextPath,
+                        reg.urlPattern,
+                        properties.findStaticContentByPath(reg.contextPath)?.startUrl ?: ""
+                )
             }
         }
+        return entries
     }
 
     override fun launch() {
@@ -100,44 +88,12 @@ open class WebServerGrizzlyImpl(
     private fun makeStaticHandlers(serverConfiguration: ServerConfiguration) {
         properties.staticContent.forEach {
             serverConfiguration.addHttpHandler(
-                    StaticHttpHandler(it),
+                    CompositeStaticHttpHandler.make(it),
                     "/${it.normalisePath}"
             )
         }
-
-        if (properties.withHalBrowser) {
-            addSwaggerUi(serverConfiguration)
-        }
-
-        if (properties.withSwaggerUi) {
-            addHalBrowser(serverConfiguration)
-        }
     }
 
-    private fun addHalBrowser(serverConfiguration: ServerConfiguration) {
-        val doc = StaticContent(
-                arrayOf(URI("/META-INF/resources/webjars/swagger-ui/3.0.14/")),
-                "/docs",
-                "index.html"
-        )
-
-        serverConfiguration.addHttpHandler(
-                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.classLoader, doc),
-                doc.normalisePath
-        )
-    }
-
-    private fun addSwaggerUi(serverConfiguration: ServerConfiguration) {
-        val hal = StaticContent(
-                arrayOf(URI("/META-INF/resources/webjars/hal-browser/3325375/")),
-                "/hal",
-                "browser.html"
-        )
-        serverConfiguration.addHttpHandler(
-                CLStaticHttpHandler(WebServerGrizzlyImpl::class.java.classLoader, hal),
-                hal.normalisePath
-        )
-    }
 
     private fun makeLoggerBridge() {
         SLF4JBridgeHandler.removeHandlersForRootLogger()
