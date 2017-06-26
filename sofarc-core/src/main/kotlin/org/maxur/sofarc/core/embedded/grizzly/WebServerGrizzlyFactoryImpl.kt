@@ -11,8 +11,6 @@ import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.embedded.*
 import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.rest.RestResourceConfig
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.net.URI
 import javax.inject.Inject
@@ -26,6 +24,13 @@ import javax.inject.Inject
 class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceConfig)
     : EmbeddedServiceFactory<WebAppProperties>() {
 
+    companion object {
+        init {
+            SLF4JBridgeHandler.removeHandlersForRootLogger()
+            SLF4JBridgeHandler.install()
+        }
+    }
+
     override fun make(cfg: ServiceConfig): EmbeddedService? =
             WebServerGrizzlyImpl(properties(cfg)!!, config, locator)
 
@@ -34,11 +39,8 @@ class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceCo
 open class WebServerGrizzlyImpl(
         private val properties: WebAppProperties,
         private val config: RestResourceConfig,
-        private val locator: Locator) : WebServer() {
-
-    companion object {
-        val log: Logger = LoggerFactory.getLogger(WebServer::class.java)
-    }
+        private val locator: Locator
+) : WebServer() {
 
     fun ServerConfiguration.title(): String = "$name '$httpServerName-$httpServerVersion'"
 
@@ -48,6 +50,36 @@ open class WebServerGrizzlyImpl(
 
     override val name: String get() = httpServer.serverConfiguration.title()
 
+    override fun launch() {
+        val result = httpServer()
+        makeStaticHandlers(result.serverConfiguration)
+        httpServer = result
+    }
+
+    override fun shutdown() {
+        httpServer.shutdownNow()
+    }
+
+    private fun httpServer(): HttpServer {
+        val server = GrizzlyHttpServerFactory.createHttpServer(
+                properties.apiUri,
+                config,
+                locator.implementation<ServiceLocator>()
+        )
+        server.serverConfiguration.isPassTraceRequest = true
+        server.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8
+        return server
+    }
+
+    private fun makeStaticHandlers(serverConfiguration: ServerConfiguration) {
+        properties.staticContent.forEach {
+            serverConfiguration.addHttpHandler(
+                    CompositeStaticHttpHandler.make(it),
+                    "/${it.normalisePath}"
+            )
+        }
+    }
+    
     override fun entries(): WebEntries {
         val cfg = httpServer.serverConfiguration
         val entries = WebEntries(properties.url)
@@ -61,41 +93,6 @@ open class WebServerGrizzlyImpl(
             }
         }
         return entries
-    }
-
-    override fun launch() {
-        makeLoggerBridge()
-        val result = httpServer()
-        makeStaticHandlers(result.serverConfiguration)
-        httpServer = result
-    }
-
-    override fun shutdown() {
-        httpServer.shutdownNow()
-    }
-
-    private fun httpServer(): HttpServer {
-        val implementation: ServiceLocator = locator.implementation<ServiceLocator>()
-        val server = GrizzlyHttpServerFactory.createHttpServer(properties.apiUri, config, implementation)
-        val result = server
-        result.serverConfiguration.isPassTraceRequest = true
-        result.serverConfiguration.defaultQueryEncoding = Charsets.UTF_8
-        return result
-    }
-
-    private fun makeStaticHandlers(serverConfiguration: ServerConfiguration) {
-        properties.staticContent.forEach {
-            serverConfiguration.addHttpHandler(
-                    CompositeStaticHttpHandler.make(it),
-                    "/${it.normalisePath}"
-            )
-        }
-    }
-
-
-    private fun makeLoggerBridge() {
-        SLF4JBridgeHandler.removeHandlersForRootLogger()
-        SLF4JBridgeHandler.install()
     }
 
 }
