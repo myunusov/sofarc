@@ -1,7 +1,6 @@
 package org.maxur.sofarc.serv
 
 import org.maxur.sofarc.core.MicroService
-import org.maxur.sofarc.core.MicroService.Companion.service
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 
@@ -23,14 +22,30 @@ object Launcher {
      * @param args - arguments of command.
      */
     @JvmStatic fun main(args: Array<String>)  {
-        service()
+          MicroService.restService()
+                  .name(":name")
+                  .beforeStart(this::beforeStart)
+                  .afterStop(this::afterStop)
+                  .onError(this::onError)
+                  .start()
+
+
+/*        service()
                 .name(":name")
-                .config().fromClasspath().rootKey("DEFAULTS")
+                .web()
+                .beforeStart(this::beforeStart)
+                .afterStop(this::afterStop)
+                .onError(this::onError)
+                .start()*/
+
+/*        service()
+                .name(":name")
+                .properties().fromClasspath().rootKey("DEFAULTS")
                 .embed("Grizzly").propertiesKey(":webapp")
                 .beforeStart(this::beforeStart)
                 .afterStop(this::afterStop)
                 .onError(this::onError)
-                .start()
+                .start()*/
     }
     
     fun beforeStart(service: MicroService) {

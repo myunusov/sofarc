@@ -28,13 +28,12 @@ class MicroServiceSpec : Spek({
         on("Build microservice without properties source") {
 
             it("should return new micro-service without embedded services") {
-                val service = sut.service()
-                        .build()
+                val service = (sut.service() as MicroServiceBuilder).build()
                 service.should.be.not.`null`
             }
 
             it("should return new micro-service with defined name") {
-                val service: MicroService = sut.service()
+                val service: MicroService = (sut.service() as MicroServiceBuilder)
                         .name("TEST1")
                         .build()
                 service.should.be.not.`null`
@@ -43,7 +42,7 @@ class MicroServiceSpec : Spek({
 
             it("should throw exception with any property key") {
                 try {
-                    val service: MicroService = sut.service()
+                    val service: MicroService = (sut.service() as MicroServiceBuilder)
                             .name(":name")
                             .build()
                     expect(service).to.be.`null`
@@ -60,7 +59,7 @@ class MicroServiceSpec : Spek({
             it("should return new micro-service with name from properties") {
                 val builder =
                         sut.service(Binder())
-                                .config().format("config")
+                                .properties().format("config")
                                 .name(":name") as MicroServiceBuilder
                 val service = builder.build()
                 service.should.be.not.`null`
@@ -96,8 +95,7 @@ class MicroServiceSpec : Spek({
             it("should start new micro-service with few embedded services") {
                 val service1 = mock<EmbeddedService> {}
                 val service2 = mock<EmbeddedService> {}
-                val builder =
-                        sut.service(Binder())
+                val builder =  (sut.service(Binder()) as MicroServiceBuilder)
                                 .embed(service1)
                                 .embed(service2)
                                 .name("TEST2")

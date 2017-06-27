@@ -5,6 +5,7 @@ package org.maxur.sofarc.core
 import org.glassfish.hk2.utilities.Binder
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.embedded.EmbeddedService
+import org.maxur.sofarc.core.service.hk2.Builder
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -23,7 +24,9 @@ import javax.inject.Inject
 class MicroService @Inject constructor(val service: EmbeddedService) {
 
     companion object {
-        fun service(vararg binders: Binder): MicroServiceBuilder = MicroServiceBuilder(*binders)
+        fun service(vararg binders: Binder): Builder = MicroServiceBuilder(*binders)
+        fun restService(vararg binders: Binder): Builder =
+                MicroServiceBuilder(*binders).properties().web()
     }
 
     /**

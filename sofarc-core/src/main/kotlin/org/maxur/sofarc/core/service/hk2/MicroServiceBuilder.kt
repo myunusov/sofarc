@@ -25,7 +25,9 @@ interface Builder {
 
     fun embed(value: String): MicroServiceBuilder.ServiceBuilder
 
-    fun config(): MicroServiceBuilder.PropertiesSourceBuilder
+    fun web(): Builder
+
+    fun properties(): MicroServiceBuilder.PropertiesSourceBuilder
 
     /**
      * Start Service
@@ -34,7 +36,6 @@ interface Builder {
 }
 
 class MicroServiceBuilder(vararg binders: Binder): Builder {
-
     @Suppress("CanBePrimaryConstructorProperty")
     private val binders: Array<out Binder> = binders
 
@@ -82,7 +83,13 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
         return serviceBuilder
     }
 
-    override fun config(): PropertiesSourceBuilder {
+    override fun web(): Builder {
+        serviceBuilder.add("Grizzly")
+        serviceBuilder.propertiesKey(":webapp")
+        return serviceBuilder
+    }
+
+    override fun properties(): PropertiesSourceBuilder {
         return propertiesSourceBuilder
     }
 
@@ -129,7 +136,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
             return this
         }
 
-        override fun config(): PropertiesSourceBuilder {
+        override fun properties(): PropertiesSourceBuilder {
             return this
         }
 
@@ -146,8 +153,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
         lateinit var type: String
 
-        // TODO webapp push down
-        var properties : Holder<Any?> = Holder.get<Any?> { locator, clazz -> locator.properties("webapp", clazz)!! }
+         var properties : Holder<Any?> = Holder.wrap(null)
 
         fun properties(value: Any): ServiceBuilder {
             properties = Holder.wrap(value)
@@ -162,7 +168,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
             properties = Holder.get<Any?> { locator, clazz -> locator.properties(key, clazz)!! }
             return this
         }
-        
+
         fun build(): MicroServiceConfig {
             complete()
             return MicroServiceConfig(Collections.unmodifiableCollection(configs))
