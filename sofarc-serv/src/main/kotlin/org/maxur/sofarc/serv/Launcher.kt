@@ -26,7 +26,7 @@ object Launcher {
         service()
                 .name(":name")
                 .config().fromClasspath().rootKey("DEFAULTS")
-                .embed("Grizzly")  // .asWebService() // .confuguredBy(":webapp")
+                .embed("Grizzly").propertiesKey(":webapp")
                 .beforeStart(this::beforeStart)
                 .afterStop(this::afterStop)
                 .onError(this::onError)

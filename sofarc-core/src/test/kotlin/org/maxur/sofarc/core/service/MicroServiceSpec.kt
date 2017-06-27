@@ -12,9 +12,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.domain.Holder
 import org.maxur.sofarc.core.embedded.EmbeddedService
 import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.embedded.ServiceConfig
 import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
@@ -127,9 +127,9 @@ class Binder : AbstractBinder() {
         }
     }
 
-    class TestServiceFactory : EmbeddedServiceFactory<Any>() {
+    class TestServiceFactory : EmbeddedServiceFactory() {
         val embeddedService = mock<EmbeddedService> {}
-        override fun make(cfg: ServiceConfig): EmbeddedService? = embeddedService
+        override fun make(properties: Holder<Any?>): EmbeddedService? = embeddedService
     }
 
     override fun configure() {

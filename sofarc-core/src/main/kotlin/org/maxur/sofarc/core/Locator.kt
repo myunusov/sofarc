@@ -4,7 +4,7 @@ interface Locator {
 
     fun <T> service(clazz: Class<T>): T?
 
-    fun <T> service(clazz: Class<T>, name: String): T?
+    fun <T> service(clazz: Class<T>, name: String?): T?
 
     fun names(clazz: Class<*>): List<String>
 

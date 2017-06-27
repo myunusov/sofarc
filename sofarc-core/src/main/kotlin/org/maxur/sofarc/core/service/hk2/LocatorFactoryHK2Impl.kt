@@ -7,8 +7,8 @@ import org.glassfish.hk2.api.TypeLiteral
 import org.glassfish.hk2.utilities.Binder
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.glassfish.hk2.utilities.binding.AbstractBinder
-import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.embedded.MicroServiceConfig
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import org.maxur.sofarc.core.service.properties.PropertiesSource
@@ -30,6 +30,7 @@ class LocatorFactoryHK2Impl {
     fun make(): Locator {
         binders.addAll(arrayListOf(LocatorBinder(), ObjectMapperBinder()))
         ServiceLocatorUtilities.bind(locator, *binders.toTypedArray())
+        ServiceLocatorUtilities.enableImmediateScope(locator)
         return locator.getService(Locator::class.java)
     }
 

@@ -1,6 +1,7 @@
 package org.maxur.sofarc.core.embedded
 
 import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.domain.Holder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -9,85 +10,55 @@ import org.slf4j.LoggerFactory
  * @version 1.0
  * @since <pre>24.06.2017</pre>
  */
-abstract class ServiceConfig {
-    
-    companion object {
-        fun make(service: EmbeddedService): ServiceConfig = ServiceProxy(service)
-        fun make(type: String, properties: Any): ServiceConfig
-                = ServiceDescriptor(type, PropertyProxy(properties))
-        fun make(type: String, propertyKey: String): ServiceConfig
-                = ServiceDescriptor(type, PropertyDescriptor(propertyKey))
-        val log: Logger = LoggerFactory.getLogger(ServiceConfig::class.java)
+class ServiceConfig {
+
+    private val service: Holder<EmbeddedService?>
+    val properties: Holder<Any?>
+
+    constructor(service: EmbeddedService) {
+        this.properties = Holder.wrap<Any?>(null)
+        this.service = Holder.wrap<EmbeddedService?>(service)
     }
 
-    abstract val isDescriptor: Boolean
+    constructor(type: String, properties: Holder<Any?>) {
+        this.properties = properties
+        this.service = Holder.get{ locator -> ServiceFactory(type, properties).make(locator) }
+    }
 
-    abstract fun  service(locator: Locator): EmbeddedService?
+    fun service(locator: Locator): EmbeddedService? = service.get<EmbeddedService>(locator)
 
-    abstract fun <PropertiesType> properties(locator: Locator, clazz: Class<PropertiesType>): PropertiesType?
 }
 
 
-private data class ServiceProxy(val service: EmbeddedService) : ServiceConfig() {
+private class ServiceFactory(val name: String, private val holder: Holder<Any?>) {
 
-    override val isDescriptor: Boolean = false
+    companion object {
+        val log: Logger = LoggerFactory.getLogger(ServiceFactory::class.java)
+    }
 
-    override fun <PropertiesType> properties(locator: Locator, clazz: Class<PropertiesType>): PropertiesType? = null
-
-    override fun service(locator: Locator): EmbeddedService = service
-}
-
-
-private class ServiceDescriptor(
-        val type: String,
-        val properties: PropertyHolder
-) : ServiceConfig() {
-
-    override val isDescriptor: Boolean = true
-
-    override fun service(locator: Locator): EmbeddedService? {
+    fun make(locator: Locator): EmbeddedService? {
         val clazz = EmbeddedServiceFactory::class.java
-        val factory = locator.service(clazz, type) ?: return serviceNotFoundError(locator)
-        return factory.make(this)
+        val factory = locator.service(clazz, name) ?: return serviceNotFoundError(locator)
+        return factory.make(holder)
                 .let { success(factory, it) } ?:
                 serviceNotCreatedError()
-    }
-
-    private fun success(factory: EmbeddedServiceFactory<*>, result: EmbeddedService?): EmbeddedService? {
-        log.info("Service '${factory.name}' is configured\n")
-        return result
-    }
-
-    private fun serviceNotCreatedError(): Nothing? {
-        log.info("Service '$type' is not configured\n")
-        return null
     }
 
     private fun serviceNotFoundError(locator: Locator): EmbeddedService? {
         val list = locator.names(EmbeddedServiceFactory::class.java)
         throw IllegalStateException(
-                "Service '$type' is not supported. Try one from this list: $list"
+                "Service '$name' is not supported. Try one from this list: $list"
         )
     }
 
-    override fun <PropertiesType> properties(locator: Locator, clazz: Class<PropertiesType>): PropertiesType?
-            = properties.get(locator, clazz)
+    private fun success(factory: EmbeddedServiceFactory, result: EmbeddedService?): EmbeddedService? {
+        log.info("Service '${factory.name}' is configured\n")
+        return result
+    }
+
+    private fun serviceNotCreatedError(): Nothing? {
+        log.info("Service '$name' is not configured\n")
+        return null
+    }
 
 }
-
-interface PropertyHolder {
-    fun <PropertiesType> get(locator: Locator, clazz: Class<PropertiesType>): PropertiesType?
-}
-
-private class PropertyProxy(val properties: Any) : PropertyHolder {
-    @Suppress("UNCHECKED_CAST")
-    override fun <PropertiesType> get(locator: Locator, clazz: Class<PropertiesType>): PropertiesType? =
-            properties as  PropertiesType
-}
-
-private class PropertyDescriptor(val key: String) : PropertyHolder {
-    override fun <PropertiesType> get(locator: Locator, clazz: Class<PropertiesType>): PropertiesType?
-            = locator.properties(key, clazz)
-
-}
-

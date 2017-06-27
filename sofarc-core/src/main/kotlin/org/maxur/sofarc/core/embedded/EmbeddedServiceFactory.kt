@@ -3,7 +3,7 @@ package org.maxur.sofarc.core.embedded
 import org.glassfish.hk2.api.ActiveDescriptor
 import org.glassfish.hk2.api.Self
 import org.jvnet.hk2.annotations.Contract
-import org.maxur.sofarc.core.Locator
+import org.maxur.sofarc.core.domain.Holder
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 
@@ -13,14 +13,11 @@ import javax.inject.Inject
  * @since <pre>24.06.2017</pre>
  */
 @Contract
-abstract class EmbeddedServiceFactory<PropertiesType: Any> {
+abstract class EmbeddedServiceFactory {
 
     @Inject
     @Self
     private var descriptor: ActiveDescriptor<*>? = null
-
-    @Inject
-    lateinit var locator: Locator
 
     lateinit var name: String
 
@@ -29,9 +26,6 @@ abstract class EmbeddedServiceFactory<PropertiesType: Any> {
        name = descriptor?.name ?: "Undefined"
     }
 
-    inline fun <reified R : PropertiesType> properties(cfg: ServiceConfig): R?
-            = cfg.properties(locator, R::class.java)
-
-    abstract fun make(cfg: ServiceConfig): EmbeddedService?
+    abstract fun make(properties: Holder<Any?>): EmbeddedService?
 
 }

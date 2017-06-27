@@ -14,19 +14,28 @@ import java.net.URI
  */
 class WebAppProperties(
         @JsonProperty("url") val url: URI,
-        @JsonProperty("api-path") val apiPath: String,
+        @JsonProperty("rest", required = false) rest: Array<RestService>?,
         @JsonProperty("static-content", required = false) staticContent: Array<StaticContent>?,
-        @JsonProperty("with-hal-browser", required = false) withHalBrowser: Boolean = false,
-        @JsonProperty("with-swagger-ui", required = false) withSwaggerUi: Boolean = false
-
+        @JsonProperty("with-hal-browser", required = false) val withHalBrowser: Boolean = false,
+        @JsonProperty("with-swagger-ui", required = false) val withSwaggerUi: Boolean = false
 ) {
-    val apiUri: URI = URI.create("$url/$apiPath")
-
     val staticContent: MutableList<StaticContent> =
             if (staticContent != null)
                 mutableListOf(*staticContent)
             else
                 ArrayList()
+
+    private val rests: MutableList<RestService> =
+            if (rest != null)
+                mutableListOf(*rest)
+            else
+                ArrayList()
+
+    val rest: RestService = when(this.rests.size) {
+        0 -> throw IllegalStateException("Current version needs in rest service")
+        1 -> this.rests[0]
+        else -> throw IllegalStateException("Current version support only one rest service")
+    }
 
     init {
         if (withHalBrowser) {
@@ -66,5 +75,9 @@ class WebAppProperties(
         mapper.enable(SerializationFeature.INDENT_OUTPUT)
         return mapper.writeValueAsString(this)
     }
+
+
+
+
 }
 

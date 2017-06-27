@@ -19,7 +19,8 @@ class LocatorHK2Impl @Inject constructor(val locator: ServiceLocator) : Locator 
 
     override fun <T> service(clazz: Class<T>): T? = locator.getService<T>(clazz)
 
-    override fun <T> service(clazz: Class<T>, name: String): T? = locator.getService<T>(clazz, name)
+    override fun <T> service(clazz: Class<T>, name: String?): T? =
+            name.let { locator.getService<T>(clazz, it) } ?: locator.getService<T>(clazz)
 
     override fun names(clazz: Class<*>): List<String> =
             locator.getAllServiceHandles(clazz).map({ it.activeDescriptor.name })

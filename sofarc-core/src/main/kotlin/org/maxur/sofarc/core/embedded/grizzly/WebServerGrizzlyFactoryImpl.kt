@@ -6,9 +6,14 @@ import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.ServerConfiguration
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
+import org.glassfish.jersey.server.ResourceConfig
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.Locator
-import org.maxur.sofarc.core.embedded.*
+import org.maxur.sofarc.core.domain.Holder
+import org.maxur.sofarc.core.embedded.EmbeddedService
+import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.embedded.WebEntries
+import org.maxur.sofarc.core.embedded.WebServer
 import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.rest.RestResourceConfig
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -21,8 +26,7 @@ import javax.inject.Inject
  * @since <pre>24.06.2017</pre>
  */
 @Service(name = "Grizzly")
-class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceConfig)
-    : EmbeddedServiceFactory<WebAppProperties>() {
+class WebServerGrizzlyFactoryImpl @Inject constructor(val locator: Locator) : EmbeddedServiceFactory() {
 
     companion object {
         init {
@@ -31,14 +35,27 @@ class WebServerGrizzlyFactoryImpl @Inject constructor(val config: RestResourceCo
         }
     }
 
-    override fun make(cfg: ServiceConfig): EmbeddedService? =
-            WebServerGrizzlyImpl(properties(cfg)!!, config, locator)
+    override fun make(properties: Holder<Any?>): EmbeddedService? {
+        val webAppProperties: WebAppProperties = properties.get(locator)!!
+        val restServiceName = webAppProperties.rest.name
+        val config : RestResourceConfig = locator.service(RestResourceConfig::class.java, restServiceName) ?:
+                return resourceConfigNotFoundError(locator, restServiceName ?: "undefined")
+        return WebServerGrizzlyImpl(webAppProperties, config, locator)
+    }
+
+
+    private fun resourceConfigNotFoundError(locator: Locator, name: String): EmbeddedService? {
+        val list = locator.names(ResourceConfig::class.java)
+        throw IllegalStateException(
+            "Resource Config '$name' is not supported. Try one from this list: $list or create one"
+        )
+    }
 
 }
 
 open class WebServerGrizzlyImpl(
         private val properties: WebAppProperties,
-        private val config: RestResourceConfig,
+        private val config: ResourceConfig,
         private val locator: Locator
 ) : WebServer() {
 
@@ -62,7 +79,7 @@ open class WebServerGrizzlyImpl(
 
     private fun httpServer(): HttpServer {
         val server = GrizzlyHttpServerFactory.createHttpServer(
-                properties.apiUri,
+                URI("${properties.url}/${properties.rest.path}"),
                 config,
                 locator.implementation<ServiceLocator>()
         )

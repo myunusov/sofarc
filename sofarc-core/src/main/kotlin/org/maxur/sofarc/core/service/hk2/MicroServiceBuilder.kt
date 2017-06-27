@@ -3,10 +3,9 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
-import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.domain.Holder
 import org.maxur.sofarc.core.embedded.EmbeddedService
-import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
 import org.maxur.sofarc.core.embedded.MicroServiceConfig
 import org.maxur.sofarc.core.embedded.ServiceConfig
 import org.maxur.sofarc.core.service.properties.PropertiesSource
@@ -41,7 +40,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
     private val propertiesSourceBuilder: PropertiesSourceBuilder = PropertiesSourceBuilder(this)
 
-    private var nameBuilder: PropertyBuilder = PropertyBuilder("Anonymous")
+    private var nameHolder: Holder<String> = Holder.string("Anonymous")
 
     private var serviceBuilder: ServiceBuilder = ServiceBuilder(this)
 
@@ -67,7 +66,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
     }
 
     override fun name(value: String): MicroServiceBuilder {
-        nameBuilder = PropertyBuilder(value)
+        nameHolder = Holder.string(value)
         return this
     }
 
@@ -105,7 +104,7 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
                 throw IllegalStateException("MicroService is not configured")
 
         service.locator = locator
-        service.name = nameBuilder.build(locator)
+        service.name = nameHolder.get(locator)!!
         service.beforeStart = beforeStart
         service.afterStop = afterStop
         service.onError = onError
@@ -147,50 +146,48 @@ class MicroServiceBuilder(vararg binders: Binder): Builder {
 
         lateinit var type: String
 
-        // TODO
-        var clazz: Class<out EmbeddedServiceFactory<Any>> =
-                EmbeddedServiceFactory::class.java as Class<out EmbeddedServiceFactory<Any>>
-        // TODO
-        var propertyKey : String = "webapp"
+        // TODO webapp push down
+        var properties : Holder<Any?> = Holder.get<Any?> { locator, clazz -> locator.properties("webapp", clazz)!! }
 
+        fun properties(value: Any): ServiceBuilder {
+            properties = Holder.wrap(value)
+            return this
+        }
+
+        fun propertiesKey(value: String): ServiceBuilder {
+            val key: String = if (value.startsWith(":"))
+                value.substringAfter(":")
+            else
+                throw IllegalArgumentException("A Key Name must be started with ':'")
+            properties = Holder.get<Any?> { locator, clazz -> locator.properties(key, clazz)!! }
+            return this
+        }
+        
         fun build(): MicroServiceConfig {
-            if (isPresent) {
-                configs.add(ServiceConfig.make(type, propertyKey))
-            }
+            complete()
             return MicroServiceConfig(Collections.unmodifiableCollection(configs))
         }
-
-        constructor(parent: MicroServiceBuilder, propertyKey: String) : this(parent) {
-            this.propertyKey = propertyKey
-        }
-
-
+        
         fun add(service: EmbeddedService) {
-            if (isPresent) {
-                configs.add(ServiceConfig.make(type, propertyKey))
-            }
-            configs.add(ServiceConfig.make(service))
+            complete()
+            configs.add(ServiceConfig(service))
             isPresent = false
         }
 
         fun add(value: String) {
-            if (isPresent) {
-                configs.add(ServiceConfig.make(type, propertyKey))
-            }
-            isPresent = true
+            complete()
             type = value
+            isPresent = true
+        }
+
+        private fun complete() {
+            if (isPresent) {
+                configs.add(ServiceConfig(type, properties))
+            }
         }
 
     }
 
-    class PropertyBuilder(val value: String) {
-
-        fun build(locator: Locator): String =
-                when {
-                    value.startsWith(":") -> locator.property(value.substringAfter(":"))
-                    else -> value
-                }
-    }
 
 }
 
