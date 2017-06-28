@@ -1,16 +1,13 @@
 package org.maxur.sofarc.core.rest
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider
-import io.swagger.jaxrs.config.BeanConfig
 import org.glassfish.jersey.ServiceLocatorProvider
 import org.glassfish.jersey.jackson.JacksonFeature
 import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.server.ServerProperties
 import org.jvnet.hk2.annotations.Contract
-import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
-import javax.annotation.PostConstruct
 import javax.ws.rs.core.Feature
 import javax.ws.rs.core.FeatureContext
 
@@ -21,50 +18,49 @@ import javax.ws.rs.core.FeatureContext
  * @since <pre>12.06.2017</pre>
  */
 @Contract
-abstract class RestResourceConfig(
-        val name: String,
-        val properties: WebAppProperties,
-        vararg val restPackages: String
-) : ResourceConfig() {
+abstract class RestResourceConfig : ResourceConfig() {
 
-    @PostConstruct
-    fun init() {
-        applicationName = name
+    val packages: MutableList<String> = ArrayList()
 
-        val list: MutableList<String> = ArrayList()
-        list.addAll(restPackages)
-        list.add(RestResourceConfig::class.java.`package`.name)
-
-        if (properties.withSwaggerUi)
-            list.add(io.swagger.jaxrs.listing.ApiListingResource::class.java.`package`.name)
-
-        list.forEach {
-            packages(it)
-        }
-
-        if (properties.withSwaggerUi)
-            initSwagger(list)
-
+    init {
+        resources(RestResourceConfig::class.java.`package`.name)
         property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true)
         property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true)
-
+        register(jacksonProvider())
         register(JacksonFeature::class.java)
         register(RuntimeExceptionHandler::class.java)
         register(ServiceLocatorFeature())
         register(ServiceEventListener("/"))
         register(MultiPartFeature::class.java)
-        
-        val provider = JacksonJaxbJsonProvider()
-        provider.setMapper(ObjectMapperProvider().provide())
-        register(provider)
     }
 
-    private fun initSwagger(packages: MutableList<String>) {
-        val config = BeanConfig()
-        config.basePath = "/" + this.properties.rest.path
-        config.host = "${properties.url.host}:${properties.url.port}"
-        config.resourcePackage = packages.joinToString(",")
-        config.scan = true
+    final override fun property(name: String, value: Any): ResourceConfig = super.property(name, value)
+    final override fun register(component: Any): ResourceConfig = super.register(component)
+    final override fun register(componentClass: Class<*>): ResourceConfig = super.register(componentClass)
+
+    /**
+     * Adds array of package names which will be used to scan for components
+     * @see ResourceConfig.packages(String...)
+     * Add package names to packages array for use it for late (ex. swagger)
+     * <p/>
+     * Package scanning ignores inheritance and therefore {@link Path} annotation
+     * on parent classes and interfaces will be ignored.
+     * <p/>
+     * Packages will be scanned recursively, including all nested packages.
+     *
+     * @param packages array of package names.
+     * @return updated resource configuration instance.
+
+     */
+    fun resources(vararg packages: String): ResourceConfig {
+        this.packages.addAll(packages)
+        return packages(*packages)
+    }
+
+    private fun jacksonProvider(): JacksonJaxbJsonProvider {
+        val provider = JacksonJaxbJsonProvider()
+        provider.setMapper(ObjectMapperProvider().provide())
+        return provider
     }
 
     /**

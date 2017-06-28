@@ -5,7 +5,6 @@ package org.maxur.sofarc.rest
 import io.swagger.annotations.*
 import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.embedded.properties.WebAppProperties
 import org.maxur.sofarc.core.rest.RestResourceConfig
 import javax.inject.Inject
 
@@ -14,7 +13,6 @@ import javax.inject.Inject
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-
 @SwaggerDefinition(
         info = Info(
                 title = "SOFTARC REST API",
@@ -41,7 +39,11 @@ import javax.inject.Inject
        // externalDocs = ExternalDocs(value = "Meteorology", url = "http://theweatherapi.io/meteorology.html")
 )
 @Service
-class RestServiceConfig @Inject constructor(
-        @Value(key = "name") name: String,
-        @Value(key = "webapp") properties: WebAppProperties
-) : RestResourceConfig(name, properties, RestServiceConfig::class.java.getPackage().name)
+class RestServiceConfig @Inject constructor(@Value(key = "name") name: String): RestResourceConfig() {
+
+    init {
+        applicationName = name
+        resources(javaClass.`package`.name)
+    }
+
+}
