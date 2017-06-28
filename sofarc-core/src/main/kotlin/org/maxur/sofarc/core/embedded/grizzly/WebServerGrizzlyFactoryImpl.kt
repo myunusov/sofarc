@@ -90,8 +90,6 @@ class WebServerGrizzlyFactoryImpl @Inject constructor(val locator: Locator) : Em
         config.scan = true
     }
 
-
-
     private fun resourceConfigNotFoundError(locator: Locator, name: String): EmbeddedService? {
         val list = locator.names(ResourceConfig::class.java)
         throw IllegalStateException(

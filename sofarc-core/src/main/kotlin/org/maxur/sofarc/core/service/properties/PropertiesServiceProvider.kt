@@ -44,11 +44,6 @@ class PropertiesServiceProvider
         }
     }
 
-    private fun makeNullService(): PropertiesService {
-
-        return  NullPropertiesService()
-    }
-
     private fun onError(formatName: String) {
         val list = factories.map { it.name}
         throw IllegalStateException(

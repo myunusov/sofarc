@@ -5,6 +5,6 @@ import org.maxur.sofarc.core.MicroService
 
 object DSL {
 
-    fun service(init: KotlinMicroServiceBuilder.() -> Unit): MicroService =
-            KotlinMicroServiceBuilder(init).build()
+    fun service(init: MicroServiceBuilder.() -> Unit): MicroService =
+            MicroServiceBuilder(init).build()
 }

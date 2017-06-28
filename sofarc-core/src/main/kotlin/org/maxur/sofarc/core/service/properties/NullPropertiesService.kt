@@ -1,7 +1,9 @@
 package org.maxur.sofarc.core.service.properties
 
+import org.jvnet.hk2.annotations.Service
 import java.net.URI
 
+@Service(name = "None")
 class NullPropertiesService : PropertiesService {
     override fun asString(key: String): String? = error(key)
 

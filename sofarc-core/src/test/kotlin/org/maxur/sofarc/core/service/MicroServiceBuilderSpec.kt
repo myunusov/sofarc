@@ -2,16 +2,48 @@ package org.maxur.sofarc.core.service
 
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import com.winterbe.expekt.should
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.it
+import org.jetbrains.spek.api.dsl.on
 import org.maxur.sofarc.core.domain.Holder
 import org.maxur.sofarc.core.embedded.EmbeddedService
 import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.service.hk2.DSL
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 
-class MicroServiceSpec : Spek({
+class MicroServiceBuilderSpec : Spek({
+
+    describe("a micro-service dsl Builder") {
+
+        on("Build empty micro-service") {
+
+            it("should return new micro-service") {
+                val service = DSL.service {
+                    properties {
+                        none()
+                    }
+                }
+                service.should.be.not.`null`
+                service.start()
+            }
+        }
+
+        on("Build empty micro-service with default properties") {
+
+            it("should return new micro-service") {
+                val service = DSL.service {
+                }
+                service.should.be.not.`null`
+                service.start()
+            }
+        }
+    }
+
 
 
     /*          MicroService.javaRestService()

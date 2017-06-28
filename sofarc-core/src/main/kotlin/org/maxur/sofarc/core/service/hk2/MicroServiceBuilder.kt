@@ -15,9 +15,9 @@ import org.maxur.sofarc.core.service.properties.PropertiesSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class KotlinMicroServiceBuilder()  {
+class MicroServiceBuilder()  {
 
-    constructor(init: KotlinMicroServiceBuilder.() -> Unit) : this() {
+    constructor(init: MicroServiceBuilder.() -> Unit) : this() {
         init()
     }
 
@@ -52,9 +52,9 @@ class KotlinMicroServiceBuilder()  {
 
         val locatorFactory = LocatorFactoryHK2Impl()
         locatorHolder?.apply { locatorFactory.bind(*binders) }
-        locatorFactory.bind(propertiesHolder.source())
+        locatorFactory.bind(propertiesHolder.build())
         val locator = locatorFactory.make()
-        val service = MicroService(servicesHolder.service(locator), locator)
+        val service = MicroService(servicesHolder.build(locator), locator)
         // TODO
         val binder =  object: AbstractBinder() {
             override fun configure() {
@@ -80,19 +80,20 @@ class ServicesHolder {
 
     private var serviceHolder: ArrayList<ServiceHolder> = ArrayList()
 
-    fun service(locator: Locator): EmbeddedService =
-        CompositeService(serviceHolder.map { it.service(locator)!! })
-
     fun service(init: ServiceHolder.() -> Unit) {
         serviceHolder.add(ServiceHolder().apply { init() })
     }
 
     fun rest(init: ServiceHolder.() -> Unit) {
-        val element = ServiceHolder().apply { init() }
-        element.type = "Grizzly"
-        element.properties = ":webapp"
-        serviceHolder.add(element)
+        serviceHolder.add(ServiceHolder().apply {
+            type = "Grizzly"
+            properties = ":webapp"
+            init()
+        })
     }
+
+    fun build(locator: Locator): EmbeddedService =
+            CompositeService(serviceHolder.map { it.service(locator)!! })
 
 }
 
@@ -123,7 +124,9 @@ class ServiceHolder {
         }
         set(value) {
             this.typeHolder = value
-            this.serviceHolder = Holder.get{ locator -> ServiceFactory(value, propertiesHolder).make(locator) }
+            this.serviceHolder = Holder.get{
+                locator -> ServiceFactory(value, propertiesHolder).make(locator)
+            }
         }
 
     var properties: Any
@@ -135,7 +138,9 @@ class ServiceHolder {
                 is String -> propertiesKey(value)
                 else -> Holder.wrap(value)
             }
-            this.serviceHolder = Holder.get{ locator -> ServiceFactory(typeHolder ?: "unknown", propertiesHolder).make(locator) }
+            this.serviceHolder = Holder.get{
+                locator -> ServiceFactory(typeHolder ?: "unknown", propertiesHolder).make(locator)
+            }
         }
 
     private fun propertiesKey(value: String): Holder<Any?> {
@@ -197,5 +202,9 @@ class ObserversHolder {
 class PropertiesHolder {
     var format: String = "Hocon"
     var rootKey: String = "DEFAULTS"
-    fun source() = PropertiesSource(format, rootKey)
+    fun none() {
+        format = "None"
+        rootKey= ""
+    }
+    fun build() = PropertiesSource(format, rootKey)
 }
