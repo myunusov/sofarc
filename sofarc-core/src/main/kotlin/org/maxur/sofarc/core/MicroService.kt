@@ -2,17 +2,12 @@
 
 package org.maxur.sofarc.core
 
-import org.glassfish.hk2.utilities.Binder
-import org.jvnet.hk2.annotations.Service
 import org.maxur.sofarc.core.embedded.EmbeddedService
-import org.maxur.sofarc.core.service.hk2.Builder
-import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import java.util.concurrent.Executors
-import javax.inject.Inject
 
 
 /**
- * The microservice
+ * The micro-service
  *
  * @param service Embedded service (may be composite)
  *
@@ -20,39 +15,37 @@ import javax.inject.Inject
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-@Service
-class MicroService @Inject constructor(val service: EmbeddedService) {
+class MicroService constructor(val service: EmbeddedService, var locator: Locator) {
 
-    companion object {
-        fun service(vararg binders: Binder): Builder = MicroServiceBuilder(*binders)
-        fun restService(vararg binders: Binder): Builder =
-                MicroServiceBuilder(*binders).properties().web()
+    private var state: State = State.STOP
+
+    init {
+        Runtime.getRuntime().addShutdownHook(object : Thread() {
+            override fun run() {
+                this@MicroService.stop()
+            }
+        })
     }
-
-    /**
-     * The Service Locator
-     */
-    lateinit var locator: Locator
 
     /**
      * The Service Name
      */
-    lateinit var name: String
+    var name: String = "Anonymous microService"
 
     /**
      * on start event
      */
-    lateinit var beforeStart: (MicroService) -> Unit
+    var beforeStart: ((MicroService) -> Unit)? = null
 
     /**
      * on stop event
      */
-    lateinit var afterStop: (MicroService) -> Unit
+    var afterStop: ((MicroService) -> Unit)? = null
 
     /**
      * on error event
      */
-    lateinit var onError: (MicroService, Exception) -> Unit
+    var onError: ((MicroService, Exception) -> Unit)? = null
 
     fun <T> bean(clazz: Class<T>): T? = locator.service(clazz)
     
@@ -60,9 +53,11 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
      * Start Service
      */
     fun start() {
+        if (state == State.START) return
         try {
-            beforeStart.invoke(this)
+            beforeStart?.invoke(this)
             service.start()
+            state =  State.START
         } catch(e: Exception) {
             error(e)
         }
@@ -72,10 +67,12 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
      * Stop Service
      */
     fun deferredStop() {
+        if (state == State.STOP) return
         try {
             postpone({
                 service.stop()
-                afterStop.invoke(this)
+                afterStop?.invoke(this)
+                state =  State.STOP
             })
         } catch(e: Exception) {
             error(e)
@@ -83,9 +80,11 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
     }
 
     fun stop() {
+        if (state == State.STOP) return
         try {
             service.stop()
-            afterStop.invoke(this)
+            afterStop?.invoke(this)
+            state =  State.STOP
         } catch(e: Exception) {
             error(e)
         }
@@ -95,12 +94,15 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
      * Restart Service
      */
     fun deferredRestart() {
+        if (state == State.STOP) return
         try {
             postpone({
                 service.stop()
-                afterStop.invoke(this)
-                beforeStart.invoke(this)
+                afterStop?.invoke(this)
+                state =  State.STOP
+                beforeStart?.invoke(this)
                 service.start()
+                state = State.START
             })
         } catch(e: Exception) {
             error(e)
@@ -108,7 +110,7 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
     }
 
     fun error(exception: Exception) {
-        onError.invoke(this, exception)
+        onError?.invoke(this, exception)
     }
 
 
@@ -130,6 +132,11 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
      * Represent State of micro-service
      */
     enum class State {
+
+        /**
+         *  Running application
+         */
+        START,
 
         /**
          * Stop application
@@ -159,3 +166,4 @@ class MicroService @Inject constructor(val service: EmbeddedService) {
 
 
 }
+

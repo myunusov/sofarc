@@ -47,7 +47,7 @@ class StaticHttpHandler(staticContent: StaticContent) : AbstractStaticHttpHandle
      *  If the <tt>root</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
      */
     init {
-        defaultPage = staticContent.page
+        defaultPage = staticContent.page ?: "index.html"
         docRoots = staticContent
                 .roots.map { makeRoot(it) }
                 .filterNotNull()

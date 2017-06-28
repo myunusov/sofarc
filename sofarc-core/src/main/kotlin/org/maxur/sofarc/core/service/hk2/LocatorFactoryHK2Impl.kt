@@ -9,7 +9,6 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.embedded.MicroServiceConfig
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import javax.inject.Singleton
@@ -34,11 +33,6 @@ class LocatorFactoryHK2Impl {
         return locator.getService(Locator::class.java)
     }
 
-    fun bind(serviceConfig: MicroServiceConfig) : LocatorFactoryHK2Impl {
-        this.binders.add(ServiceConfigBiner(serviceConfig))
-        return this
-    }
-
     fun bind(propertiesSource: PropertiesSource) : LocatorFactoryHK2Impl {
         this.binders.add(ConfigSourceBinder(propertiesSource))
         return this
@@ -48,7 +42,6 @@ class LocatorFactoryHK2Impl {
         this.binders.addAll(binders)
         return this
     }
-
     private class ConfigSourceBinder(val propertiesSource: PropertiesSource) : AbstractBinder() {
         override fun configure() {
             bind(propertiesSource).to(PropertiesSource::class.java)
@@ -56,28 +49,23 @@ class LocatorFactoryHK2Impl {
                     .to(object : TypeLiteral<InjectionResolver<Value>>() {})
                     .`in`(Singleton::class.java)
         }
-    }
 
-    private class ServiceConfigBiner(val serviceConfig: MicroServiceConfig) : AbstractBinder() {
-        override fun configure() {
-            bind(serviceConfig).to(MicroServiceConfig::class.java)
-        }
     }
-
     private class ObjectMapperBinder : AbstractBinder() {
         override fun configure() {
             bindFactory(ObjectMapperProvider::class.java)
                     .to(ObjectMapper::class.java)
                     .`in`(Singleton::class.java)
         }
-    }
 
+    }
     class LocatorBinder : AbstractBinder() {
         override fun configure() {
             bind(LocatorHK2Impl::class.java)
                     .to(Locator::class.java)
                     .`in`(Singleton::class.java)
         }
+
     }
 
 }

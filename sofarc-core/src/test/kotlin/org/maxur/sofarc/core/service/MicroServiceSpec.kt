@@ -2,38 +2,55 @@ package org.maxur.sofarc.core.service
 
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.times
-import com.nhaarman.mockito_kotlin.verify
-import com.winterbe.expekt.expect
-import com.winterbe.expekt.should
 import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
-import org.maxur.sofarc.core.MicroService
 import org.maxur.sofarc.core.domain.Holder
 import org.maxur.sofarc.core.embedded.EmbeddedService
 import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
-import org.maxur.sofarc.core.service.hk2.MicroServiceBuilder
 import org.maxur.sofarc.core.service.properties.PropertiesService
 import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 
 class MicroServiceSpec : Spek({
 
-    describe("a micro-service dsl Builder") {
+
+    /*          MicroService.javaRestService()
+                      .name(":name")
+                      .beforeStart(this::beforeStart)
+                      .afterStop(this::afterStop)
+                      .onError(this::onError)
+                      .start()*/
+
+
+/*        service()
+                .name(":name")
+                .web()
+                .beforeStart(this::beforeStart)
+                .afterStop(this::afterStop)
+                .onError(this::onError)
+                .start()*/
+
+/*        service()
+                .name(":name")
+                .properties().fromClasspath().rootKey("DEFAULTS")
+                .embed("Grizzly").propertiesKey(":webapp")
+                .beforeStart(this::beforeStart)
+                .afterStop(this::afterStop)
+                .onError(this::onError)
+                .start()*/
+
+/*    describe("a micro-service dsl Builder") {
         val sut = MicroService
 
         on("Build microservice without properties source") {
 
             it("should return new micro-service without embedded services") {
-                val service = (sut.service() as MicroServiceBuilder).build()
+                val service = (sut.javaService() as JavaMicroServiceBuilder).build()
                 service.should.be.not.`null`
             }
 
             it("should return new micro-service with defined name") {
-                val service: MicroService = (sut.service() as MicroServiceBuilder)
+                val service: MicroService = (sut.javaService() as JavaMicroServiceBuilder)
                         .name("TEST1")
                         .build()
                 service.should.be.not.`null`
@@ -42,7 +59,7 @@ class MicroServiceSpec : Spek({
 
             it("should throw exception with any property key") {
                 try {
-                    val service: MicroService = (sut.service() as MicroServiceBuilder)
+                    val service: MicroService = (sut.javaService() as JavaMicroServiceBuilder)
                             .name(":name")
                             .build()
                     expect(service).to.be.`null`
@@ -58,9 +75,9 @@ class MicroServiceSpec : Spek({
 
             it("should return new micro-service with name from properties") {
                 val builder =
-                        sut.service(Binder())
+                        sut.javaService(Binder())
                                 .properties().format("config")
-                                .name(":name") as MicroServiceBuilder
+                                .name(":name") as JavaMicroServiceBuilder
                 val service = builder.build()
                 service.should.be.not.`null`
                 service.name.should.be.equal("name")
@@ -68,9 +85,9 @@ class MicroServiceSpec : Spek({
 
             it("should return new micro-service with embedded service") {
                 val builder =
-                        sut.service(Binder())
+                        sut.javaService(Binder())
                                 .embed("service1")
-                                .name("TEST2") as MicroServiceBuilder
+                                .name("TEST2") as JavaMicroServiceBuilder
 
                 val service = builder.build()
                 service.should.be.not.`null`
@@ -78,10 +95,10 @@ class MicroServiceSpec : Spek({
 
             it("should return new micro-service with few embedded services") {
                 val builder =
-                        sut.service(Binder())
+                        sut.javaService(Binder())
                                 .embed("service1")
                                 .embed("service2")
-                                .name("TEST2") as MicroServiceBuilder
+                                .name("TEST2") as JavaMicroServiceBuilder
 
                 val service = builder.build()
                 service.should.be.not.`null`
@@ -95,7 +112,7 @@ class MicroServiceSpec : Spek({
             it("should start new micro-service with few embedded services") {
                 val service1 = mock<EmbeddedService> {}
                 val service2 = mock<EmbeddedService> {}
-                val builder =  (sut.service(Binder()) as MicroServiceBuilder)
+                val builder =  (sut.javaService(Binder()) as JavaMicroServiceBuilder)
                                 .embed(service1)
                                 .embed(service2)
                                 .name("TEST2")
@@ -113,7 +130,7 @@ class MicroServiceSpec : Spek({
 
         }
 
-    }
+    }*/
 })
 
 

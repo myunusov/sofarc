@@ -12,8 +12,7 @@ abstract class Holder<Type> {
         fun <Type> wrap(value: Type) : Holder<Type> = Wrapper(value)
         fun <Type> get(func: () -> Type) : Holder<Type> = Descriptor0(func)
         fun <Type> get(func: (Locator) -> Type) : Holder<Type> = Descriptor1(func)
-        fun <Type> get(func: (Locator, clazz: Class<out Type>) -> Type) : Holder<Type>
-                = Descriptor2(func)
+        fun <Type> get(func: (Locator, clazz: Class<out Type>) -> Type) : Holder<Type> = Descriptor2(func)
     }
 
     inline fun <reified R : Type>  get(locator: Locator): R? {

@@ -55,6 +55,7 @@ class ServiceResource @Inject constructor(val service: MicroService) {
         when (MicroService.State.from(state)) {
             MicroService.State.STOP -> service.deferredStop()
             MicroService.State.RESTART -> service.deferredRestart()
+            MicroService.State.START -> {}
         }
     }
 

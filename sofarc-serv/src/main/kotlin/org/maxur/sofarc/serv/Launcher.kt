@@ -1,6 +1,7 @@
 package org.maxur.sofarc.serv
 
 import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.service.hk2.DSL
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 
@@ -22,30 +23,22 @@ object Launcher {
      * @param args - arguments of command.
      */
     @JvmStatic fun main(args: Array<String>)  {
-          MicroService.restService()
-                  .name(":name")
-                  .beforeStart(this::beforeStart)
-                  .afterStop(this::afterStop)
-                  .onError(this::onError)
-                  .start()
+        DSL.service {
+            title = ":name"
+            observers {
+                beforeStart = this@Launcher::beforeStart
+                afterStop = this@Launcher::afterStop
+                onError = this@Launcher::onError
+            }
+            properties {
+                format = "Hocon"
+            }
+            services {
+               rest {
 
-
-/*        service()
-                .name(":name")
-                .web()
-                .beforeStart(this::beforeStart)
-                .afterStop(this::afterStop)
-                .onError(this::onError)
-                .start()*/
-
-/*        service()
-                .name(":name")
-                .properties().fromClasspath().rootKey("DEFAULTS")
-                .embed("Grizzly").propertiesKey(":webapp")
-                .beforeStart(this::beforeStart)
-                .afterStop(this::afterStop)
-                .onError(this::onError)
-                .start()*/
+               }
+            }
+        }.start()
     }
     
     fun beforeStart(service: MicroService) {
@@ -57,9 +50,10 @@ object Launcher {
         log().info("${service.name} is stopped")
     }
 
-    fun onError(service: MicroService, exception: Exception) {
+    fun onError(@Suppress("UNUSED_PARAMETER") service: MicroService, exception: Exception) {
         log().error(exception.message, exception)
     }
+    
 
 }
 

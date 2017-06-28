@@ -48,7 +48,7 @@ class CLStaticHttpHandler(val classLoader: ClassLoader, staticContent: StaticCon
     /**
      * default page
      */
-    private val defaultPage: String = staticContent.page
+    private val defaultPage: String = staticContent.page!!
 
     /**
      *  This staticContent is the static content configuration
