@@ -15,7 +15,10 @@ import java.util.concurrent.Executors
  * @version 1.0
  * @since <pre>12.06.2017</pre>
  */
-class MicroService constructor(val service: EmbeddedService, var locator: Locator) {
+class MicroService constructor(
+        val service: EmbeddedService,
+        val locator: Locator
+) {
 
     private var state: State = State.STOP
 

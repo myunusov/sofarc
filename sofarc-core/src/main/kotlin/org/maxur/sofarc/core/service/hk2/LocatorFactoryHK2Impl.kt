@@ -10,7 +10,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
-import org.maxur.sofarc.core.service.properties.PropertiesSource
+import org.maxur.sofarc.core.service.properties.PropertiesService
 import javax.inject.Singleton
 
 /**
@@ -26,25 +26,23 @@ class LocatorFactoryHK2Impl {
         ServiceLocatorUtilities.createAndPopulateServiceLocator()
     }
 
-    fun make(): Locator {
-        binders.addAll(arrayListOf(LocatorBinder(), ObjectMapperBinder()))
+    fun make(propertyServiceCreator: (Locator) -> PropertiesService): Locator {
+        ServiceLocatorUtilities.bind(locator, LocatorBinder())
+        ServiceLocatorUtilities.bind(locator, ObjectMapperBinder())
+        val result = locator.getService(Locator::class.java)
+        ServiceLocatorUtilities.bind(locator, PropertiesBinder(propertyServiceCreator.invoke(result)))
         ServiceLocatorUtilities.bind(locator, *binders.toTypedArray())
         ServiceLocatorUtilities.enableImmediateScope(locator)
-        return locator.getService(Locator::class.java)
-    }
-
-    fun bind(propertiesSource: PropertiesSource) : LocatorFactoryHK2Impl {
-        this.binders.add(ConfigSourceBinder(propertiesSource))
-        return this
+        return result
     }
 
     fun bind(vararg binders: Binder) : LocatorFactoryHK2Impl {
         this.binders.addAll(binders)
         return this
     }
-    private class ConfigSourceBinder(val propertiesSource: PropertiesSource) : AbstractBinder() {
+    private class PropertiesBinder(val service: PropertiesService) : AbstractBinder() {
         override fun configure() {
-            bind(propertiesSource).to(PropertiesSource::class.java)
+            bind(service).to(PropertiesService::class.java)
             bind(PropertiesInjectionResolver::class.java)
                     .to(object : TypeLiteral<InjectionResolver<Value>>() {})
                     .`in`(Singleton::class.java)

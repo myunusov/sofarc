@@ -34,9 +34,7 @@ object Launcher {
                 format = "Hocon"
             }
             services {
-               rest {
-
-               }
+               rest {}
             }
         }.start()
     }

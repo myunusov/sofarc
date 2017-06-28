@@ -11,6 +11,8 @@ import org.maxur.sofarc.core.MicroService
 import org.maxur.sofarc.core.domain.Holder
 import org.maxur.sofarc.core.embedded.EmbeddedService
 import org.maxur.sofarc.core.embedded.EmbeddedServiceFactory
+import org.maxur.sofarc.core.service.properties.PropertiesService
+import org.maxur.sofarc.core.service.properties.PropertiesServiceFactory
 import org.maxur.sofarc.core.service.properties.PropertiesSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,6 +22,7 @@ class MicroServiceBuilder()  {
     constructor(init: MicroServiceBuilder.() -> Unit) : this() {
         init()
     }
+
 
     private var locatorHolder: LocatorHolder? = null
     private var observersHolder: ObserversHolder? = null
@@ -49,11 +52,9 @@ class MicroServiceBuilder()  {
     }
 
     fun build(): MicroService {
-
         val locatorFactory = LocatorFactoryHK2Impl()
         locatorHolder?.apply { locatorFactory.bind(*binders) }
-        locatorFactory.bind(propertiesHolder.build())
-        val locator = locatorFactory.make()
+        val locator = locatorFactory.make({locator -> propertiesHolder.build(locator)})
         val service = MicroService(servicesHolder.build(locator), locator)
         // TODO
         val binder =  object: AbstractBinder() {
@@ -70,6 +71,11 @@ class MicroServiceBuilder()  {
         return service
     }
 }
+
+class LocatorHolder {
+    var binders: Array<Binder> = arrayOf()
+}
+
 
 private val nullService = object : EmbeddedService() {
     override fun start() = Unit
@@ -93,7 +99,7 @@ class ServicesHolder {
     }
 
     fun build(locator: Locator): EmbeddedService =
-            CompositeService(serviceHolder.map { it.service(locator)!! })
+            CompositeService(serviceHolder.map { it.build(locator)!! })
 
 }
 
@@ -104,44 +110,53 @@ class CompositeService(val services: List<EmbeddedService>) : EmbeddedService() 
 
 class ServiceHolder {
 
-    private var serviceHolder: Holder<EmbeddedService?> = Holder.wrap(nullService)
-    private var propertiesHolder: Holder<Any?> = Holder.wrap<Any?>(null)
-    private var typeHolder: String? = null
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(MicroServiceBuilder::class.java)
+        private val clazz = EmbeddedServiceFactory::class.java
+    }
+    private var holder: Holder<EmbeddedService?> = Holder.none()
+    private var propertiesHolder: Holder<Any?> = Holder.wrap(null)
 
-    var ref: EmbeddedService
-        get() {
-            throw UnsupportedOperationException()
-        }
+    var ref: EmbeddedService? = null
         set(value) {
-            this.propertiesHolder = Holder.wrap<Any?>(null)
-            this.serviceHolder = Holder.wrap<EmbeddedService?>(value)
-            this.typeHolder = null
+            this.propertiesHolder = Holder.none()
+            this.holder = Holder.wrap<EmbeddedService?>(value)
         }
 
-    var type: String
-        get() {
-            throw UnsupportedOperationException()
-        }
+    var typeHolder: String? = null
+    var type: String?
+        get() = typeHolder
         set(value) {
             this.typeHolder = value
-            this.serviceHolder = Holder.get{
-                locator -> ServiceFactory(value, propertiesHolder).make(locator)
-            }
+            this.holder = makeServiceHolder()
         }
 
-    var properties: Any
-        get() {
-            throw UnsupportedOperationException()
+    private fun makeServiceHolder(): Holder<EmbeddedService?> {
+        return Holder.get {
+            locator ->
+            locator
+                    .locate(typeHolder ?: "unknown", clazz)
+                    .make(propertiesHolder)
+                    .apply { success() } ?:serviceNotCreatedError()
         }
+    }
+
+    var properties: Any? = null
         set(value) {
             this.propertiesHolder = when(value) {
                 is String -> propertiesKey(value)
                 else -> Holder.wrap(value)
             }
-            this.serviceHolder = Holder.get{
-                locator -> ServiceFactory(typeHolder ?: "unknown", propertiesHolder).make(locator)
-            }
         }
+
+    private fun success() {
+        log.info("Service '$typeHolder' is configured\n")
+    }
+
+    private fun serviceNotCreatedError(): Nothing? {
+        log.info("Service '$typeHolder' is not configured\n")
+        return null
+    }
 
     private fun propertiesKey(value: String): Holder<Any?> {
         val key: String = if (value.startsWith(":"))
@@ -151,47 +166,10 @@ class ServiceHolder {
         return Holder.get<Any?> { locator, clazz -> locator.properties(key, clazz)!! }
     }
 
-
-    fun service(locator: Locator): EmbeddedService? = serviceHolder.get<EmbeddedService>(locator)
-
-}
-
-class ServiceFactory(val name: String, private val holder: Holder<Any?>) {
-
-    companion object {
-        val log: Logger = LoggerFactory.getLogger(ServiceFactory::class.java)
-    }
-
-    fun make(locator: Locator): EmbeddedService? {
-        val clazz = EmbeddedServiceFactory::class.java
-        val factory = locator.service(clazz, name) ?: return serviceNotFoundError(locator)
-        return factory.make(holder)
-                .let { success(factory, it) } ?:
-                serviceNotCreatedError()
-    }
-
-    private fun serviceNotFoundError(locator: Locator): EmbeddedService? {
-        val list = locator.names(EmbeddedServiceFactory::class.java)
-        throw IllegalStateException(
-                "Service '$name' is not supported. Try one from this list: $list"
-        )
-    }
-
-    private fun success(factory: EmbeddedServiceFactory, result: EmbeddedService?): EmbeddedService? {
-        log.info("Service '${factory.name}' is configured\n")
-        return result
-    }
-
-    private fun serviceNotCreatedError(): Nothing? {
-        log.info("Service '$name' is not configured\n")
-        return null
-    }
+    fun build(locator: Locator): EmbeddedService? = holder.get<EmbeddedService>(locator)
 
 }
 
-class LocatorHolder {
-    var binders: Array<Binder> = arrayOf()
-}
 
 class ObserversHolder {
     var beforeStart: ((MicroService) -> Unit)? = null
@@ -200,11 +178,30 @@ class ObserversHolder {
 }
 
 class PropertiesHolder {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(MicroServiceBuilder::class.java)
+        private val clazz = PropertiesServiceFactory::class.java
+    }
+
     var format: String = "Hocon"
     var rootKey: String = "DEFAULTS"
     fun none() {
         format = "None"
         rootKey= ""
     }
-    fun build() = PropertiesSource(format, rootKey)
+
+    fun build(locator: Locator): PropertiesService {
+
+        val source = PropertiesSource(format, rootKey)
+
+        val factory: PropertiesServiceFactory = locator.locate(format, PropertiesServiceFactory::class.java)
+
+        return factory.make(source)
+                        ?.apply { log.info("Properties Service is '${factory.name}'\n") }
+                        ?: throw IllegalStateException("Properties Service '$format' is not configured\n")
+    }
+
 }
+
+
