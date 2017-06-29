@@ -2,10 +2,7 @@
 
 package org.maxur.sofarc.core.service.hk2
 
-import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.utilities.Binder
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities
-import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.MicroService
 import org.maxur.sofarc.core.domain.Holder
@@ -23,8 +20,7 @@ class MicroServiceBuilder()  {
         init()
     }
 
-
-    private var locatorHolder: LocatorHolder? = null
+    private var locatorHolder: LocatorHolder = LocatorHolder()
     private var observersHolder: ObserversHolder? = null
     private var titleHolder: Holder<String> = Holder.string("Anonymous")
     private var propertiesHolder: PropertiesHolder = PropertiesHolder()
@@ -52,18 +48,15 @@ class MicroServiceBuilder()  {
     }
 
     fun build(): MicroService {
-        val locatorFactory = LocatorFactoryHK2Impl()
-        locatorHolder?.apply { locatorFactory.bind(*binders) }
-        val locator = locatorFactory.make({locator -> propertiesHolder.build(locator)})
-        val service = MicroService(servicesHolder.build(locator), locator)
-        // TODO
-        val binder =  object: AbstractBinder() {
-            override fun configure() {
-                bind(service).to(MicroService::class.java)
-            }
-        }  
-        val implementation: ServiceLocator = locator.implementation<ServiceLocator>()
-        ServiceLocatorUtilities.bind(implementation, binder)
+        val locator = LocatorFactoryHK2Impl {
+            bind(*locatorHolder.binders)
+            bind(propertiesHolder::build)
+            bind({locator -> MicroService(servicesHolder.build(locator), locator)})
+        }.make()
+
+        val service = locator.service(MicroService::class.java) ?:
+                throw IllegalStateException("A MicroService is not created. Maybe It's configuration is wrong")
+
         service.name = titleHolder.get(locator)!!
         service.beforeStart = observersHolder?.beforeStart
         service.afterStop = observersHolder?.afterStop
@@ -120,7 +113,7 @@ class ServiceHolder {
     var ref: EmbeddedService? = null
         set(value) {
             this.propertiesHolder = Holder.none()
-            this.holder = Holder.wrap<EmbeddedService?>(value)
+            this.holder = Holder.wrap(value)
         }
 
     var typeHolder: String? = null

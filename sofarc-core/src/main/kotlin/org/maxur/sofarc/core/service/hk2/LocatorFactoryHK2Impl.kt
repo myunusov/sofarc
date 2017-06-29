@@ -18,21 +18,28 @@ import javax.inject.Singleton
  * @version 1.0
  * @since <pre>24.06.2017</pre>
  */
-class LocatorFactoryHK2Impl {
+class LocatorFactoryHK2Impl(init: LocatorFactoryHK2Impl.() -> Unit) {
 
     val binders = ArrayList<Binder>()
+    val bindersFunc = ArrayList<(Locator) -> Any>()
 
     val locator: ServiceLocator by lazy {
         ServiceLocatorUtilities.createAndPopulateServiceLocator()
     }
 
-    fun make(propertyServiceCreator: (Locator) -> PropertiesService): Locator {
+    fun make(): Locator {
+        ServiceLocatorUtilities.enableImmediateScope(locator)
         ServiceLocatorUtilities.bind(locator, LocatorBinder())
         ServiceLocatorUtilities.bind(locator, ObjectMapperBinder())
         val result = locator.getService(Locator::class.java)
-        ServiceLocatorUtilities.bind(locator, PropertiesBinder(propertyServiceCreator.invoke(result)))
+        bindersFunc.forEach {
+            val service = it.invoke(result)
+            ServiceLocatorUtilities.bind(locator, ServiceBinder(service))
+            if (service is PropertiesService) {
+                ServiceLocatorUtilities.bind(locator, PropertiesInjectionResolverBinder())
+            }
+        }
         ServiceLocatorUtilities.bind(locator, *binders.toTypedArray())
-        ServiceLocatorUtilities.enableImmediateScope(locator)
         return result
     }
 
@@ -40,15 +47,25 @@ class LocatorFactoryHK2Impl {
         this.binders.addAll(binders)
         return this
     }
-    private class PropertiesBinder(val service: PropertiesService) : AbstractBinder() {
+
+    fun bind(func: (Locator) -> Any) {
+        bindersFunc.add(func)
+    }
+
+    private class ServiceBinder(val service: Any) : AbstractBinder() {
         override fun configure() {
-            bind(service).to(PropertiesService::class.java)
+            bind(service).to(service.javaClass)
+        }
+    }
+
+    private class PropertiesInjectionResolverBinder : AbstractBinder() {
+        override fun configure() {
             bind(PropertiesInjectionResolver::class.java)
                     .to(object : TypeLiteral<InjectionResolver<Value>>() {})
                     .`in`(Singleton::class.java)
         }
-
     }
+
     private class ObjectMapperBinder : AbstractBinder() {
         override fun configure() {
             bindFactory(ObjectMapperProvider::class.java)
@@ -65,5 +82,10 @@ class LocatorFactoryHK2Impl {
         }
 
     }
+
+    init {
+        init()
+    }
+
 
 }
