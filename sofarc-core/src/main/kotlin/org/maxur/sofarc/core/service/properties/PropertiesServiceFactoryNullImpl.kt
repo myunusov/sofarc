@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package org.maxur.sofarc.core.service.properties
 
 import org.jvnet.hk2.annotations.Service

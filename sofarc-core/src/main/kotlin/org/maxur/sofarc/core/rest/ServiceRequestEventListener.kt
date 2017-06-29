@@ -23,11 +23,7 @@ class ServiceRequestEventListener
         val log: Logger = LoggerFactory.getLogger(ServiceRequestEventListener::class.java)
     }
 
-    private val startTime: Long
-
-    init {
-        startTime = System.currentTimeMillis()
-    }
+    private val startTime: Long = System.currentTimeMillis()
 
     override fun onEvent(event: RequestEvent) {
         when (event.type) {

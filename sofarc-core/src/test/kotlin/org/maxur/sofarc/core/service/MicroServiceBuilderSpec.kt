@@ -33,7 +33,7 @@ class MicroServiceBuilderSpec : Spek({
             }
         }
 
-/*        on("Build empty micro-service with default properties") {
+        on("Build empty micro-service with default properties") {
 
             it("should return new micro-service") {
                 val service = DSL.service {
@@ -41,7 +41,7 @@ class MicroServiceBuilderSpec : Spek({
                 service.should.be.not.`null`
                 service.start()
             }
-        }*/
+        }
     }
 
 

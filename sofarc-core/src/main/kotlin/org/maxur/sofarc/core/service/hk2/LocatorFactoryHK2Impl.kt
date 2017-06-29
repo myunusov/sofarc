@@ -1,6 +1,7 @@
 package org.maxur.sofarc.core.service.hk2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.glassfish.hk2.api.Factory
 import org.glassfish.hk2.api.InjectionResolver
 import org.glassfish.hk2.api.ServiceLocator
 import org.glassfish.hk2.api.TypeLiteral
@@ -10,7 +11,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.annotation.Value
 import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
-import org.maxur.sofarc.core.service.properties.PropertiesService
 import javax.inject.Singleton
 
 /**
@@ -21,7 +21,11 @@ import javax.inject.Singleton
 class LocatorFactoryHK2Impl(init: LocatorFactoryHK2Impl.() -> Unit) {
 
     val binders = ArrayList<Binder>()
-    val bindersFunc = ArrayList<(Locator) -> Any>()
+
+    init {
+        binders.add(ObjectMapperBinder())
+        binders.add(PropertiesInjectionResolverBinder())
+    }
 
     val locator: ServiceLocator by lazy {
         ServiceLocatorUtilities.createAndPopulateServiceLocator()
@@ -30,17 +34,9 @@ class LocatorFactoryHK2Impl(init: LocatorFactoryHK2Impl.() -> Unit) {
     fun make(): Locator {
         ServiceLocatorUtilities.enableImmediateScope(locator)
         ServiceLocatorUtilities.bind(locator, LocatorBinder())
-        ServiceLocatorUtilities.bind(locator, ObjectMapperBinder())
-        val result = locator.getService(Locator::class.java)
-        bindersFunc.forEach {
-            val service = it.invoke(result)
-            ServiceLocatorUtilities.bind(locator, ServiceBinder(service))
-            if (service is PropertiesService) {
-                ServiceLocatorUtilities.bind(locator, PropertiesInjectionResolverBinder())
-            }
-        }
+        val service = locator.getService(Locator::class.java)
         ServiceLocatorUtilities.bind(locator, *binders.toTypedArray())
-        return result
+        return service
     }
 
     fun bind(vararg binders: Binder) : LocatorFactoryHK2Impl {
@@ -48,14 +44,21 @@ class LocatorFactoryHK2Impl(init: LocatorFactoryHK2Impl.() -> Unit) {
         return this
     }
 
-    fun bind(func: (Locator) -> Any) {
-        bindersFunc.add(func)
+    fun bind(func: (Locator) -> Any, clazz: Class<*>) {
+        binders.add(ServiceBinder(func, clazz))
     }
 
-    private class ServiceBinder(val service: Any) : AbstractBinder() {
+    private class ServiceBinder(val func: (Locator) -> Any, val clazz: Class<*>) : AbstractBinder() {
         override fun configure() {
-            bind(service).to(service.javaClass)
+            bindFactory(ServiceProvider(func)).to(clazz)
         }
+    }
+
+    private class ServiceProvider<T>(val func: (Locator) -> T): Factory<T> {
+        val locator: Locator by lazy { LocatorHK2Impl.current }
+        val result: T by lazy { func.invoke(locator) }
+        override fun dispose(instance: T) = Unit
+        override fun provide(): T = result
     }
 
     private class PropertiesInjectionResolverBinder : AbstractBinder() {

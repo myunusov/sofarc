@@ -24,7 +24,7 @@ import java.util.function.Function
  * @since <pre>24.06.2017</pre>
  */
 @Service(name = "Hocon")
-class PropertiesServiceFactoryHoconImpl: PropertiesServiceFactory() {
+class PropertiesServiceFactoryHoconImpl : PropertiesServiceFactory() {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(PropertiesServiceFactoryHoconImpl::class.java)
@@ -35,7 +35,7 @@ class PropertiesServiceFactoryHoconImpl: PropertiesServiceFactory() {
             return PropertiesServiceHoconImpl(ConfigFactory.load().getConfig(source.rootKey))
         } catch(e: ConfigException.Missing) {
             log.warn(
-                    "The '${source.rootKey}' config not found. " +
+                "The '${source.rootKey}' config not found. " +
                     "Add application.conf with '${source.rootKey}' section to classpath"
             )
             return null

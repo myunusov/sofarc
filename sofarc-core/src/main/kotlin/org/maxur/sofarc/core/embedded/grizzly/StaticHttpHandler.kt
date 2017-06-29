@@ -13,6 +13,12 @@ import java.nio.file.Paths
  *
  * @param staticContent is the static content configuration
  *
+ *  with
+ *      the root(s) - directories where the static resource are located
+ *      the path    - url related to base url
+ *      and default page (index.html by default)
+ *  If the <tt>root</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
+ *
  * @author Maxim Yunusov
  *
  */
@@ -21,7 +27,7 @@ class StaticHttpHandler(staticContent: StaticContent) : AbstractStaticHttpHandle
     /**
      * default page
      */
-    private val defaultPage: String
+    private val defaultPage: String = staticContent.page ?: "index.html"
 
     /**
      * docRoots the list of directories where files will be serviced from.
@@ -39,15 +45,8 @@ class StaticHttpHandler(staticContent: StaticContent) : AbstractStaticHttpHandle
      * Create a new instance which will look for static pages located
      * under the <tt>docRoot</tt>. If the <tt>docRoot</tt> is <tt>null</tt> -
      * static pages won't be served by this <tt>HttpHandler</tt>
-     * @param staticContent the static content configuration
-     *  with
-     *      the root(s) - directories where the static resource are located
-     *      the path    - url related to base url
-     *      and default page (index.html by default)
-     *  If the <tt>root</tt> is <tt>null</tt> - static pages won't be served by this <tt>HttpHandler</tt>
      */
     init {
-        defaultPage = staticContent.page ?: "index.html"
         docRoots = staticContent
                 .roots.map { makeRoot(it) }
                 .filterNotNull()

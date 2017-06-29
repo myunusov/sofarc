@@ -27,7 +27,7 @@ abstract class WebServer: EmbeddedService() {
     override fun start() {
         log.info("Start Web Server")
         launch()
-        log.info("${name} is started on $baseUri")
+        log.info("$name is started on $baseUri")
         log.info(entries().toString())
     }
 

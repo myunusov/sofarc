@@ -26,16 +26,16 @@ interface PropertiesService {
 
     /**
      * return properties by key
-
+     *
      * @param key properties key
-     * *
+     *
      * @return properties by key
      */
     fun asLong(key: String): Long?
 
     /**
      * return properties by key
-
+     *
      * @param key properties key
      * *
      * @return properties by key
@@ -44,18 +44,18 @@ interface PropertiesService {
 
     /**
      * return properties by key
-
+     *
      * @param key properties key
-     * *
+     *
      * @return properties by key
      */
     fun asURI(key: String): URI?
 
     /**
      * return properties by key
-
-     * @param key   properties key
-     * *
+     *
+     * @param key properties key
+     *
      * @param clazz properties type
      * *
      * @return properties by key

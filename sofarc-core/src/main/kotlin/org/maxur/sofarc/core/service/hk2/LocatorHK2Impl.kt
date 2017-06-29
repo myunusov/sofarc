@@ -8,6 +8,15 @@ import javax.inject.Inject
 
 class LocatorHK2Impl @Inject constructor(val locator: ServiceLocator) : Locator {
 
+    companion object {
+        lateinit var  current: Locator
+            private set
+    }
+
+    init {
+        current = this
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun <T> implementation(): T = locator as T
 

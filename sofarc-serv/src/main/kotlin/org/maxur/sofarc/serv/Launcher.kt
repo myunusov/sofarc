@@ -1,6 +1,6 @@
 package org.maxur.sofarc.serv
 
-import org.maxur.sofarc.core.MicroService
+import org.maxur.sofarc.core.BaseMicroService
 import org.maxur.sofarc.core.service.hk2.DSL
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
@@ -39,16 +39,16 @@ object Launcher {
         }.start()
     }
     
-    fun beforeStart(service: MicroService) {
+    fun beforeStart(service: BaseMicroService) {
         (service.bean(ConfigParams::class.java))!!.log()
         log().info("${service.name} is started")
     }
     
-    fun afterStop(service: MicroService) {
+    fun afterStop(service: BaseMicroService) {
         log().info("${service.name} is stopped")
     }
 
-    fun onError(@Suppress("UNUSED_PARAMETER") service: MicroService, exception: Exception) {
+    fun onError(@Suppress("UNUSED_PARAMETER") service: BaseMicroService, exception: Exception) {
         log().error(exception.message, exception)
     }
     

@@ -9,9 +9,8 @@ abstract class Holder<Type> {
             value.startsWith(":") -> Holder.get { locator -> locator.property(value.substringAfter(":")) }
             else -> Holder.wrap(value)
         }
-        fun <Type> none() : Holder<Type?> = Wrapper<Type?>(null)
+        fun <Type> none() : Holder<Type?> = Wrapper(null)
         fun <Type> wrap(value: Type) : Holder<Type> = Wrapper(value)
-        fun <Type> get(func: () -> Type) : Holder<Type> = Descriptor0(func)
         fun <Type> get(func: (Locator) -> Type) : Holder<Type> = Descriptor1(func)
         fun <Type> get(func: (Locator, clazz: Class<out Type>) -> Type) : Holder<Type> = Descriptor2(func)
     }
@@ -23,11 +22,6 @@ abstract class Holder<Type> {
     open fun get(): Type? = throw UnsupportedOperationException("This holder don't support get() without parameters")
 
     abstract fun get(locator: Locator, clazz: Class<out Type>): Type?
-}
-
-private class Descriptor0<Type>(val func: () -> Type) : Holder<Type>() {
-    override fun get(): Type? = func()
-    override fun get(locator: Locator, clazz: Class<out Type>): Type? = func()
 }
 
 private class Descriptor1<Type>(val func: (Locator) -> Type) : Holder<Type>() {

@@ -3,6 +3,7 @@
 package org.maxur.sofarc.core.service.hk2
 
 import org.glassfish.hk2.utilities.Binder
+import org.maxur.sofarc.core.BaseMicroService
 import org.maxur.sofarc.core.Locator
 import org.maxur.sofarc.core.MicroService
 import org.maxur.sofarc.core.domain.Holder
@@ -14,7 +15,7 @@ import org.maxur.sofarc.core.service.properties.PropertiesSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class MicroServiceBuilder()  {
+class MicroServiceBuilder() {
 
     constructor(init: MicroServiceBuilder.() -> Unit) : this() {
         init()
@@ -26,7 +27,7 @@ class MicroServiceBuilder()  {
     private var propertiesHolder: PropertiesHolder = PropertiesHolder()
     private var servicesHolder: ServicesHolder = ServicesHolder()
 
-    var title : String = "Anonymous"
+    var title: String = "Anonymous"
         set(value) {
             titleHolder = Holder.string(value)
         }
@@ -50,17 +51,19 @@ class MicroServiceBuilder()  {
     fun build(): MicroService {
         val locator = LocatorFactoryHK2Impl {
             bind(*locatorHolder.binders)
-            bind(propertiesHolder::build)
-            bind({locator -> MicroService(servicesHolder.build(locator), locator)})
+            bind(propertiesHolder::build, PropertiesService::class.java)
+            bind({ locator -> BaseMicroService(servicesHolder.build(locator), locator) }, MicroService::class.java)
         }.make()
 
         val service = locator.service(MicroService::class.java) ?:
-                throw IllegalStateException("A MicroService is not created. Maybe It's configuration is wrong")
+            throw IllegalStateException("A MicroService is not created. Maybe It's configuration is wrong")
 
-        service.name = titleHolder.get(locator)!!
-        service.beforeStart = observersHolder?.beforeStart
-        service.afterStop = observersHolder?.afterStop
-        service.onError = observersHolder?.onError
+        if (service is BaseMicroService) {
+            service.name = titleHolder.get(locator)!!
+            service.beforeStart = observersHolder?.beforeStart
+            service.afterStop = observersHolder?.afterStop
+            service.onError = observersHolder?.onError
+        }
         return service
     }
 }
@@ -68,7 +71,6 @@ class MicroServiceBuilder()  {
 class LocatorHolder {
     var binders: Array<Binder> = arrayOf()
 }
-
 
 private val nullService = object : EmbeddedService() {
     override fun start() = Unit
@@ -92,7 +94,7 @@ class ServicesHolder {
     }
 
     fun build(locator: Locator): EmbeddedService =
-            CompositeService(serviceHolder.map { it.build(locator)!! })
+        CompositeService(serviceHolder.map { it.build(locator)!! })
 
 }
 
@@ -107,6 +109,7 @@ class ServiceHolder {
         private val log: Logger = LoggerFactory.getLogger(MicroServiceBuilder::class.java)
         private val clazz = EmbeddedServiceFactory::class.java
     }
+
     private var holder: Holder<EmbeddedService?> = Holder.none()
     private var propertiesHolder: Holder<Any?> = Holder.wrap(null)
 
@@ -128,15 +131,15 @@ class ServiceHolder {
         return Holder.get {
             locator ->
             locator
-                    .locate(typeHolder ?: "unknown", clazz)
-                    .make(propertiesHolder)
-                    .apply { success() } ?:serviceNotCreatedError()
+                .locate(typeHolder ?: "unknown", clazz)
+                .make(propertiesHolder)
+                .apply { success() } ?: serviceNotCreatedError()
         }
     }
 
     var properties: Any? = null
         set(value) {
-            this.propertiesHolder = when(value) {
+            this.propertiesHolder = when (value) {
                 is String -> propertiesKey(value)
                 else -> Holder.wrap(value)
             }
@@ -163,11 +166,10 @@ class ServiceHolder {
 
 }
 
-
 class ObserversHolder {
-    var beforeStart: ((MicroService) -> Unit)? = null
-    var afterStop: ((MicroService) -> Unit)? = null
-    var onError: ((MicroService, Exception)  -> Unit)? = null
+    var beforeStart: ((BaseMicroService) -> Unit)? = null
+    var afterStop: ((BaseMicroService) -> Unit)? = null
+    var onError: ((BaseMicroService, Exception) -> Unit)? = null
 }
 
 class PropertiesHolder {
@@ -181,7 +183,7 @@ class PropertiesHolder {
     var rootKey: String = "DEFAULTS"
     fun none() {
         format = "None"
-        rootKey= ""
+        rootKey = ""
     }
 
     fun build(locator: Locator): PropertiesService {
@@ -191,10 +193,8 @@ class PropertiesHolder {
         val factory: PropertiesServiceFactory = locator.locate(format, PropertiesServiceFactory::class.java)
 
         return factory.make(source)
-                        ?.apply { log.info("Properties Service is '${factory.name}'\n") }
-                        ?: throw IllegalStateException("Properties Service '$format' is not configured\n")
+            ?.apply { log.info("Properties Service is '${factory.name}'\n") }
+            ?: throw IllegalStateException("Properties Service '$format' is not configured\n")
     }
 
 }
-
-

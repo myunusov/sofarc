@@ -6,8 +6,6 @@ import org.jvnet.hk2.annotations.Contract
 import javax.annotation.PostConstruct
 import javax.inject.Inject
 
-
-
 /**
  * @author myunusov
  * @version 1.0
@@ -24,10 +22,9 @@ abstract class PropertiesServiceFactory {
 
     @PostConstruct
     fun init() {
-       name = descriptor?.name ?: "Undefined"
+        name = descriptor?.name ?: "Undefined"
     }
 
     abstract fun make(source: PropertiesSource): PropertiesService?
-
 
 }

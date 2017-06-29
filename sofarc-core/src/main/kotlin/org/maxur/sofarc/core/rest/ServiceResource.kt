@@ -3,11 +3,23 @@ package org.maxur.sofarc.core.rest
 import dk.nykredit.jackson.dataformat.hal.HALLink
 import dk.nykredit.jackson.dataformat.hal.annotation.Link
 import dk.nykredit.jackson.dataformat.hal.annotation.Resource
-import io.swagger.annotations.*
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import io.swagger.annotations.ApiResponse
+import io.swagger.annotations.ApiResponses
+import org.maxur.sofarc.core.BaseMicroService
 import org.maxur.sofarc.core.MicroService
 import java.net.URI
 import javax.inject.Inject
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 
@@ -20,7 +32,7 @@ import javax.ws.rs.core.MediaType
  */
 @Path("/service")
 @Api(value = "/service", description = "Endpoint for Service specific operations")
-class ServiceResource @Inject constructor(val service: MicroService) {
+class ServiceResource @Inject constructor(val service: BaseMicroService) {
 
     @GET
     @Produces("application/hal+json")
@@ -31,9 +43,7 @@ class ServiceResource @Inject constructor(val service: MicroService) {
             ApiResponse(code = 500, message = "Internal server error")
         )
     )
-    fun service() : ServiceView {
-        return ServiceView(service)
-    }
+    fun service() : ServiceView = ServiceView(service)
 
     @PUT()
     @Path("/{state}")
@@ -51,12 +61,10 @@ class ServiceResource @Inject constructor(val service: MicroService) {
     fun state(
             @ApiParam(name = "state", value = "New service state", required = true, allowableValues="stop, restart")
             @PathParam("state") state: String
-    ) {
-        when (MicroService.State.from(state)) {
-            MicroService.State.STOP -> service.deferredStop()
-            MicroService.State.RESTART -> service.deferredRestart()
-            MicroService.State.START -> {}
-        }
+    ) = when (MicroService.State.from(state)) {
+        MicroService.State.STOP -> service.deferredStop()
+        MicroService.State.RESTART -> service.deferredRestart()
+        MicroService.State.START -> {}
     }
 
 }
@@ -64,7 +72,7 @@ class ServiceResource @Inject constructor(val service: MicroService) {
 @Suppress("unused")
 @Resource
 @ApiModel(value="Service View", description="Service Presentation Model")
-class ServiceView(service: MicroService) {
+class ServiceView(service: BaseMicroService) {
 
     @ApiModelProperty(value = "Service name")
     val name: String = service.name
