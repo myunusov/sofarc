@@ -4,8 +4,8 @@ package org.maxur.sofarc.rest
 
 import io.swagger.annotations.*
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.rest.RestResourceConfig
+import org.maxur.mserv.core.annotation.Value
+import org.maxur.mserv.core.rest.RestResourceConfig
 import javax.inject.Inject
 
 /**
@@ -18,8 +18,6 @@ import javax.inject.Inject
                 title = "SOFTARC REST API",
                 description = "This is a SoftArc Service REST API",
                 version = "V1.0",
-
-            //    termsOfService = "http://theweatherapi.io/terms.html",
                 contact = Contact(
                         name = "Maxim Yunusov",
                         email = "myunusov@maxur.org",
@@ -36,7 +34,6 @@ import javax.inject.Inject
         tags = arrayOf(
             Tag(name = "Private", description = "Tag used to denote operations as private")
         )
-       // externalDocs = ExternalDocs(value = "Meteorology", url = "http://theweatherapi.io/meteorology.html")
 )
 @Service
 class RestServiceConfig @Inject constructor(@Value(key = "name") name: String): RestResourceConfig() {

@@ -4,9 +4,9 @@ package org.maxur.sofarc.params
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import org.jvnet.hk2.annotations.Service
-import org.maxur.sofarc.core.annotation.Value
-import org.maxur.sofarc.core.embedded.properties.WebAppProperties
-import org.maxur.sofarc.core.service.jackson.ObjectMapperProvider
+import org.maxur.mserv.core.annotation.Value
+import org.maxur.mserv.core.embedded.properties.WebAppProperties
+import org.maxur.mserv.core.service.jackson.ObjectMapperProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -27,7 +27,7 @@ class ConfigParams @Inject constructor(
     companion object {
         val log: Logger = LoggerFactory.getLogger(ConfigParams::class.java)
     }
-    
+
     fun log() {
         log.info("\n--- Configuration Parameters ---\n")
         log.info("$this")

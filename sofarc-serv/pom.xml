@@ -15,15 +15,14 @@
 
     <properties>
         <sofarc.root.path>${basedir}/..</sofarc.root.path>
-        <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
         <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.maxur</groupId>
-            <artifactId>sofarc-core</artifactId>
-            <version>0.01-SNAPSHOT</version>
+            <artifactId>maxur-mserv-core</artifactId>
+            <version>0.2</version>
         </dependency>
 
         <dependency>
@@ -104,22 +103,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-inhabitant-generator</artifactId>
-                <version>${hk2.version}</version>
-                <configuration>
-                    <verbose>true</verbose>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-inhabitants</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
                 <version>${dokka.version}</version>
@@ -151,37 +134,6 @@
                     <sourceDirectories>
                         <dir>${basedir}/src/main/kotlin</dir>
                     </sourceDirectories>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>com.github.kongchen</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
-                <version>3.1.4</version>
-                <configuration>
-                    <apiSources>
-                        <apiSource>
-                            <springmvc>false</springmvc>
-                            <locations>org.maxur.sofarc.core.rest</locations>
-                            <schemes>http</schemes>
-                            <host>baseurl</host>
-                            <info>
-                                <title>SOFTARC REST API</title>
-                                <version>v1</version>
-                                <description>This is a SoftArc Service REST API</description>
-                                <contact>
-                                    <email>myunusov(@)maxur.org</email>
-                                    <name>Maxim Yunusov</name>
-                                    <url>https://github.com/myunusov</url>
-                                </contact>
-                                <license>
-                                    <name>Apache 2</name>
-                                    <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-                                </license>
-                            </info>
-                            <swaggerDirectory>${project.build.directory}/generated-sources/resources/</swaggerDirectory>
-                        </apiSource>
-                    </apiSources>
                 </configuration>
             </plugin>
 

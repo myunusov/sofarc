@@ -1,7 +1,9 @@
 package org.maxur.sofarc.serv
 
-import org.maxur.sofarc.core.BaseMicroService
-import org.maxur.sofarc.core.service.hk2.DSL
+
+import org.maxur.mserv.core.embedded.WebServer
+import org.maxur.mserv.core.service.msbuilder.Kotlin
+import org.maxur.mserv.core.service.properties.PropertiesService
 import org.maxur.sofarc.params.ConfigParams
 import org.slf4j.LoggerFactory
 
@@ -22,36 +24,36 @@ object Launcher {
      *
      * @param args - arguments of command.
      */
-    @JvmStatic fun main(args: Array<String>)  {
-        DSL.service {
+    @JvmStatic fun main(args: Array<String>) {
+        Kotlin.service {
             title = ":name"
-            observers {
-                beforeStart = this@Launcher::beforeStart
-                afterStop = this@Launcher::afterStop
-                onError = this@Launcher::onError
-            }
+            packages = "org.maxur.sofarc"
+
             properties {
-                format = "Hocon"
+                format = "hocon"
             }
-            services {
-               rest {}
+
+            services += rest {
+                afterStart += this@Launcher::afterWebServiceStart
             }
+
+            beforeStart += this@Launcher::beforeStart
+            afterStart += { service ->  log().info("${service.name} is started") }
+            afterStop += { _ ->  log().info("Microservice is stopped") }
+            onError += { exception ->  log().error(exception.message, exception) }
+
         }.start()
     }
-    
-    fun beforeStart(service: BaseMicroService) {
-        (service.bean(ConfigParams::class.java))!!.log()
-        log().info("${service.name} is started")
-    }
-    
-    fun afterStop(service: BaseMicroService) {
-        log().info("${service.name} is stopped")
+
+    fun beforeStart(configParams: ConfigParams, propertiesService: PropertiesService) {
+        log().info("Properties Source is '${propertiesService.name}'\n")
+        configParams.log()
     }
 
-    fun onError(@Suppress("UNUSED_PARAMETER") service: BaseMicroService, exception: Exception) {
-        log().error(exception.message, exception)
+    fun afterWebServiceStart(service: WebServer) {
+        log().info("${service.name} is started on ${service.baseUri}\"")
+        log().info(service.entries().toString())
     }
-    
 
 }
 
